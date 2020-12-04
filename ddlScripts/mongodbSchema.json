@@ -1,0 +1,405 @@
+{
+    "feedsInfo": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "feedId",
+                "feedMonth",
+                "title",
+                "link",
+                "feedLink",
+                "description",
+                "language",
+                "pubDate",
+                "lastBuildDate",
+                "lastModifiedDate"
+            ],
+            "properties": {
+                "feedId": {
+                    "bsonType": "int"
+                },
+                "feedMonth": {
+                    "bsonType": "date"
+                },
+                "title": {
+                    "bsonType": "string"
+                },
+                "feedLink": {
+                    "bsonType": "string"
+                },
+                "description": {
+                    "bsonType": "string"
+                },
+                "pubDate": {
+                    "bsonType": "date"
+                },
+                "lastBuildDate": {
+                    "bsonType": "date"
+                },
+                "lastModifiedDate": {
+                    "bsonType": "date"
+                }
+            }
+        }
+    },
+    "filingsInfo": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "filingId",
+                "feedId",
+                "filingLink",
+                "entryPoint",
+                "enclosureUrl",
+                "pubDate",
+                "companyName",
+                "formType",
+                "inlineXBRL",
+                "filingDate",
+                "cikNumber",
+                "accessionNumber",
+                "fileNumber",
+                "acceptanceDatetime",
+                "period",
+                "assignedSic",
+                "fiscalYearEnd",
+                "fiscalYearEndMonth",
+                "fiscalYearEndDay",
+                "duplicate"
+            ],
+            "properties": {
+                "filingId": {
+                    "bsonType": "long"
+                },
+                "feedId": {
+                    "bsonType": "int"
+                },
+                "feedLink": {
+                    "bsonType": "string"
+                },
+                "entryPoint": {
+                    "bsonType": "string"
+                },
+                "enclosureUrl": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pubDate": {
+                    "bsonType": "date"
+                },
+                "companyName": {
+                    "bsonType": "string"
+                },
+                "formType": {
+                    "bsonType": "string"
+                },
+                "inlineXBRL": {
+                    "bsonType": "int"
+                },
+                "filingDate": {
+                    "bsonType": "date"
+                },
+                "cikNumber": {
+                    "bsonType": "string"
+                },
+                "accessionNumber": {
+                    "bsonType": "string"
+                },
+                "fileNumber": {
+                    "bsonType": "string"
+                },
+                "acceptanceDatetime": {
+                    "bsonType": "date"
+                },
+                "period": {
+                    "bsonType": [
+                        "date",
+                        "null"
+                    ]
+                },
+                "assignedSic": {
+                    "bsonType": "int"
+                },
+                "fiscalYearEnd": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fiscalYearEndMonth": {
+                    "bsonType": [
+                        "int",
+                        "null"
+                    ]
+                },
+                "fiscalYearEndDay": {
+                    "bsonType": [
+                        "int",
+                        "null"
+                    ]
+                },
+                "duplicate": {
+                    "bsonType": "int"
+                }
+            }
+        }
+    },
+    "rssItems": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "filingId",
+                "rssItem"
+            ],
+            "properties": {
+                "filingId": {
+                    "bsonType": "long"
+                },
+                "rssItem": {
+                    "bsonType": "string",
+                    "pattern": "^<item>"
+                }
+            }
+        }
+    },
+    "filersInfo": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "cikNumber",
+                "formerNames",
+                "industry_code",
+                "industry_description",
+                "stateOfIncorporation",
+                "mailingState",
+                "mailingCity",
+                "mailingZip",
+                "conformedName",
+                "businessCity",
+                "businessState",
+                "businessZip",
+                "country"
+            ],
+            "properties": {
+                "cikNumber": {
+                    "bsonType": "string"
+                },
+                "formerNames": {
+                    "bsonType": [
+                        "array",
+                        "null"
+                    ],
+                    "items": {
+                        "bsonType": "object",
+                        "required": [
+                            "date",
+                            "name"
+                        ],
+                        "properties": {
+                            "date": {
+                                "bsonType": [
+                                    "date"
+                                ]
+                            },
+                            "name": {
+                                "bsonType": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "industry_description": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "stateOfIncorporation": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mailingState": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mailingCity": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mailingZip": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "conformedName": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "businessCity": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "businessState": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "businessZip": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "country": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ]
+                }
+            }
+        }
+    },
+    "filesInfo": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "fileId",
+                "filingId",
+                "feedId",
+                "accessionNumber",
+                "sequence",
+                "file",
+                "type",
+                "size",
+                "description",
+                "inlineXBRL",
+                "url",
+                "type_tag",
+                "duplicate"
+            ],
+            "properties": {
+                "fileId": {
+                    "bsonType": "long"
+                },
+                "filingId": {
+                    "bsonType": "long"
+                },
+                "feedId": {
+                    "bsonType": "int"
+                },
+                "accessionNumber": {
+                    "bsonType": "string"
+                },
+                "sequence": {
+                    "bsonType": "int"
+                },
+                "file": {
+                    "bsonType": "string"
+                },
+                "type": {
+                    "bsonType": "string"
+                },
+                "size": {
+                    "bsonType": [
+                        "int",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "bsonType": "string"
+                },
+                "businessState": {
+                    "bsonType": "bool"
+                },
+                "url": {
+                    "bsonType": "string"
+                },
+                "type_tag": {
+                    "bsonType": "string"
+                },
+                "duplicate": {
+                    "bsonType": "int"
+                }
+            }
+        }
+    },
+    "cikTickerMapping": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "tickerSymbol",
+                "cikNumber"
+            ],
+            "properties": {
+                "tickerSymbol": {
+                    "bsonType": "string"
+                },
+                "cikNumber": {
+                    "bsonType": "string"
+                }
+            }
+        }
+    },
+    "lastUpdate": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "id",
+                "lastUpdate"
+            ],
+            "properties": {
+                "id": {
+                    "bsonType": "int"
+                },
+                "lastUpdate": {
+                    "bsonType": "date"
+                }
+            }
+        }
+    },
+    "formulae" : {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "formulaId",
+                "fileName",
+                "description",
+                "formulaLinkbase",
+                "dateTimeAdded"],
+            "properties": {
+                "formulaId": {
+                    "bsonType": "int"
+                },
+                "fileName" :{
+                  "bsonType": "string"
+                },
+                "description": {
+                    "bsonType": "string"
+                },
+                "formulaLinkbase": {
+                    "bsonType": "string",
+                    "pattern": "^<"
+                },
+                "dateTimeAdded": {
+                  "bsonType": "date"
+                }
+            }
+        }
+    }
+}

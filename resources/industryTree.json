@@ -1,0 +1,3286 @@
+{
+    "1": {
+        "description": "Agriculture, Forestry, And Fishing",
+        "id": 2788,
+        "children": {
+            "100": {
+                "description": "AGRICULTURAL PRODUCTION - CROPS",
+                "id": 2210,
+                "children": {}
+            },
+            "200": {
+                "description": "AGRICULTURAL PRODUCTION - LIVESTOCK",
+                "id": 2211,
+                "children": {}
+            },
+            "700": {
+                "description": "AGRICULTURAL SERVICES",
+                "id": 2212,
+                "children": {}
+            },
+            "800": {
+                "description": "FORESTRY",
+                "id": 2213,
+                "children": {}
+            },
+            "900": {
+                "description": "FISHING, HUNTING & TRAPPING",
+                "id": 2214,
+                "children": {}
+            }
+        }
+    },
+    "10": {
+        "description": "Mining",
+        "id": 2789,
+        "children": {
+            "1000": {
+                "description": "METAL MINING",
+                "id": 2215,
+                "children": {
+                    "1040": {
+                        "description": "Gold & Silver Ores",
+                        "id": 2216,
+                        "children": {}
+                    },
+                    "1090": {
+                        "description": "Miscellaneous Metal Ores",
+                        "id": 2217,
+                        "children": {}
+                    }
+                }
+            },
+            "1200": {
+                "description": "COAL MINING",
+                "id": 2218,
+                "children": {
+                    "1220": {
+                        "description": "Bituminous Coal & Lignite Mining",
+                        "id": 2219,
+                        "children": {
+                            "1221": {
+                                "description": "Bituminous Coal & Lignite - Surface",
+                                "id": 2220,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "1300": {
+                "description": "OIL & GAS EXTRACTION",
+                "id": 2221,
+                "children": {
+                    "1310": {
+                        "description": "Crude Petroleum & Natural Gas",
+                        "id": 2222,
+                        "children": {
+                            "1311": {
+                                "description": "Crude Petroleum & Natural Gas",
+                                "id": 2223,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "1380": {
+                        "description": "Oil & Gas Field Services",
+                        "id": 2224,
+                        "children": {
+                            "1381": {
+                                "description": "Drilling Oil & Gas Wells",
+                                "id": 2225,
+                                "children": {}
+                            },
+                            "1382": {
+                                "description": "Oil & Gas Exploration Services",
+                                "id": 2226,
+                                "children": {}
+                            },
+                            "1389": {
+                                "description": "Oil & Gas Field Services, nec",
+                                "id": 2227,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "1400": {
+                "description": "NONMETALLIC MINERALS, EXCEPT FUELS",
+                "id": 2228,
+                "children": {}
+            }
+        }
+    },
+    "15": {
+        "description": "Construction",
+        "id": 2790,
+        "children": {
+            "1500": {
+                "description": "GENERAL BUILDING CONTRACTORS",
+                "id": 2229,
+                "children": {
+                    "1520": {
+                        "description": "Residential Building Construction",
+                        "id": 2230,
+                        "children": {}
+                    },
+                    "1530": {
+                        "description": "Operative Builders",
+                        "id": 2231,
+                        "children": {
+                            "1531": {
+                                "description": "Operative Builders",
+                                "id": 2232,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "1540": {
+                        "description": "Nonresidential Building Construction",
+                        "id": 2233,
+                        "children": {}
+                    }
+                }
+            },
+            "1600": {
+                "description": "HEAVY CONSTRUCTION, EXCEPT BUILDING",
+                "id": 2234,
+                "children": {
+                    "1620": {
+                        "description": "Heavy Construction, Except Highway",
+                        "id": 2235,
+                        "children": {
+                            "1623": {
+                                "description": "Water, Sewer & Utility Lines",
+                                "id": 2236,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "1700": {
+                "description": "SPECIAL TRADE CONTRACTORS",
+                "id": 2237,
+                "children": {
+                    "1730": {
+                        "description": "Electrical Work",
+                        "id": 2238,
+                        "children": {
+                            "1731": {
+                                "description": "Electrical Work",
+                                "id": 2239,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "20": {
+        "description": "Manufacturing",
+        "id": 2791,
+        "children": {
+            "2000": {
+                "description": "FOOD & KINDRED PRODUCTS",
+                "id": 2240,
+                "children": {
+                    "2010": {
+                        "description": "Meat Products",
+                        "id": 2241,
+                        "children": {
+                            "2011": {
+                                "description": "Meat Packing Plants",
+                                "id": 2242,
+                                "children": {}
+                            },
+                            "2013": {
+                                "description": "Sausages & Other Prepared Meats",
+                                "id": 2243,
+                                "children": {}
+                            },
+                            "2015": {
+                                "description": "Poultry Slaughtering & Processing",
+                                "id": 2244,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2020": {
+                        "description": "Dairy Products",
+                        "id": 2245,
+                        "children": {
+                            "2024": {
+                                "description": "Ice Cream & Frozen Desserts",
+                                "id": 2246,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2030": {
+                        "description": "Preserved Fruits & Vegetables",
+                        "id": 2247,
+                        "children": {
+                            "2033": {
+                                "description": "Canned Fruits & Vegetables",
+                                "id": 2248,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2040": {
+                        "description": "Grain Mill Products",
+                        "id": 2249,
+                        "children": {}
+                    },
+                    "2050": {
+                        "description": "Bakery Products",
+                        "id": 2250,
+                        "children": {
+                            "2052": {
+                                "description": "Cookies & Crackers",
+                                "id": 2251,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2060": {
+                        "description": "Sugar & Confectionery Products",
+                        "id": 2252,
+                        "children": {}
+                    },
+                    "2070": {
+                        "description": "Fats & Oils",
+                        "id": 2253,
+                        "children": {}
+                    },
+                    "2080": {
+                        "description": "Beverages",
+                        "id": 2254,
+                        "children": {
+                            "2082": {
+                                "description": "Malt Beverages",
+                                "id": 2255,
+                                "children": {}
+                            },
+                            "2086": {
+                                "description": "Bottled & Canned Soft Drinks",
+                                "id": 2256,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2090": {
+                        "description": "Miscellaneous Food & Kindred Products",
+                        "id": 2257,
+                        "children": {
+                            "2092": {
+                                "description": "Fresh or Frozen Prepared Fish",
+                                "id": 2258,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "2100": {
+                "description": "TOBACCO PRODUCTS",
+                "id": 2259,
+                "children": {
+                    "2110": {
+                        "description": "Cigarettes",
+                        "id": 2260,
+                        "children": {
+                            "2111": {
+                                "description": "Cigarettes",
+                                "id": 2261,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "2200": {
+                "description": "TEXTILE MILL PRODUCTS",
+                "id": 2262,
+                "children": {
+                    "2210": {
+                        "description": "Broadwoven Fabric Mills, Cotton",
+                        "id": 2263,
+                        "children": {
+                            "2211": {
+                                "description": "Broadwoven Fabric Mills, Cotton",
+                                "id": 2264,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2220": {
+                        "description": "Broadwoven Fabric Mills, Manmade",
+                        "id": 2265,
+                        "children": {
+                            "2221": {
+                                "description": "Broadwoven Fabric Mills, Manmade",
+                                "id": 2266,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2250": {
+                        "description": "Knitting Mills",
+                        "id": 2267,
+                        "children": {
+                            "2253": {
+                                "description": "Knit Outerwear Mills",
+                                "id": 2268,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2270": {
+                        "description": "Carpets & Rugs",
+                        "id": 2269,
+                        "children": {
+                            "2273": {
+                                "description": "Carpets & Rugs",
+                                "id": 2270,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "2300": {
+                "description": "APPAREL & OTHER TEXTILE PRODUCTS",
+                "id": 2271,
+                "children": {
+                    "2320": {
+                        "description": "Men's & Boys' Furnishings",
+                        "id": 2272,
+                        "children": {}
+                    },
+                    "2330": {
+                        "description": "Women's & Misses' Outerwear",
+                        "id": 2273,
+                        "children": {}
+                    },
+                    "2340": {
+                        "description": "Women's & Children's Undergarments",
+                        "id": 2274,
+                        "children": {}
+                    },
+                    "2390": {
+                        "description": "Miscellaneous Fabricated Textile Products",
+                        "id": 2275,
+                        "children": {}
+                    }
+                }
+            },
+            "2400": {
+                "description": "LUMBER & WOOD PRODUCTS",
+                "id": 2276,
+                "children": {
+                    "2420": {
+                        "description": "Sawmills & Planing Mills",
+                        "id": 2277,
+                        "children": {
+                            "2421": {
+                                "description": "Sawmills & Planing Mills, General",
+                                "id": 2278,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2430": {
+                        "description": "Millwork, Plywood, & Structural Members",
+                        "id": 2279,
+                        "children": {}
+                    },
+                    "2450": {
+                        "description": "Wood Buildings & Mobile Homes",
+                        "id": 2280,
+                        "children": {
+                            "2451": {
+                                "description": "Mobile Homes",
+                                "id": 2281,
+                                "children": {}
+                            },
+                            "2452": {
+                                "description": "Prefabricated Wood Buildings",
+                                "id": 2282,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "2500": {
+                "description": "FURNITURE & FIXTURES",
+                "id": 2283,
+                "children": {
+                    "2510": {
+                        "description": "Household Furniture",
+                        "id": 2284,
+                        "children": {
+                            "2511": {
+                                "description": "Wood Household Furniture",
+                                "id": 2285,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2520": {
+                        "description": "Office Furniture",
+                        "id": 2286,
+                        "children": {
+                            "2522": {
+                                "description": "Office Furniture, Except Wood",
+                                "id": 2287,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2530": {
+                        "description": "Public Building & Related Furniture",
+                        "id": 2288,
+                        "children": {
+                            "2531": {
+                                "description": "Public Building & Related Furniture",
+                                "id": 2289,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2540": {
+                        "description": "Partitions & Fixtures",
+                        "id": 2290,
+                        "children": {}
+                    },
+                    "2590": {
+                        "description": "Miscellaneous Furniture & Fixtures",
+                        "id": 2291,
+                        "children": {}
+                    }
+                }
+            },
+            "2600": {
+                "description": "PAPER & ALLIED PRODUCTS",
+                "id": 2292,
+                "children": {
+                    "2610": {
+                        "description": "Pulp Mills",
+                        "id": 2293,
+                        "children": {
+                            "2611": {
+                                "description": "Pulp Mills",
+                                "id": 2294,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2620": {
+                        "description": "Paper Mills",
+                        "id": 2295,
+                        "children": {
+                            "2621": {
+                                "description": "Paper Mills",
+                                "id": 2296,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2630": {
+                        "description": "Paperboard Mills",
+                        "id": 2297,
+                        "children": {
+                            "2631": {
+                                "description": "Paperboard Mills",
+                                "id": 2298,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2650": {
+                        "description": "Paperboard Containers & Boxes",
+                        "id": 2299,
+                        "children": {}
+                    },
+                    "2670": {
+                        "description": "Miscellaneous Converted Paper Products",
+                        "id": 2300,
+                        "children": {
+                            "2673": {
+                                "description": "Bags: Plastic, Laminated & Coated",
+                                "id": 2301,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "2700": {
+                "description": "PRINTING & PUBLISHING",
+                "id": 2302,
+                "children": {
+                    "2710": {
+                        "description": "Newspapers",
+                        "id": 2303,
+                        "children": {
+                            "2711": {
+                                "description": "Newspapers",
+                                "id": 2304,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2720": {
+                        "description": "Periodicals",
+                        "id": 2305,
+                        "children": {
+                            "2721": {
+                                "description": "Periodicals",
+                                "id": 2306,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2730": {
+                        "description": "Books",
+                        "id": 2307,
+                        "children": {
+                            "2731": {
+                                "description": "Book Publishing",
+                                "id": 2308,
+                                "children": {}
+                            },
+                            "2732": {
+                                "description": "Book Printing",
+                                "id": 2309,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2740": {
+                        "description": "Miscellaneous Publishing",
+                        "id": 2310,
+                        "children": {
+                            "2741": {
+                                "description": "Miscellaneous Publishing",
+                                "id": 2311,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2750": {
+                        "description": "Commercial Printing",
+                        "id": 2312,
+                        "children": {}
+                    },
+                    "2760": {
+                        "description": "Manifold Business Forms",
+                        "id": 2313,
+                        "children": {
+                            "2761": {
+                                "description": "Manifold Business Forms",
+                                "id": 2314,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2770": {
+                        "description": "Greeting Cards",
+                        "id": 2315,
+                        "children": {
+                            "2771": {
+                                "description": "Greeting Cards",
+                                "id": 2316,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2780": {
+                        "description": "Blankbooks & Bookbinding",
+                        "id": 2317,
+                        "children": {}
+                    },
+                    "2790": {
+                        "description": "Printing Trade Services",
+                        "id": 2318,
+                        "children": {}
+                    }
+                }
+            },
+            "2800": {
+                "description": "CHEMICALS & ALLIED PRODUCTS",
+                "id": 2319,
+                "children": {
+                    "2810": {
+                        "description": "Industrial Inorganic Chemicals",
+                        "id": 2320,
+                        "children": {}
+                    },
+                    "2820": {
+                        "description": "Plastics Materials & Synthetics",
+                        "id": 2321,
+                        "children": {
+                            "2821": {
+                                "description": "Plastics Materials & Resins",
+                                "id": 2322,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2830": {
+                        "description": "Drugs",
+                        "id": 2323,
+                        "children": {
+                            "2833": {
+                                "description": "Medicinals & Botanicals",
+                                "id": 2324,
+                                "children": {}
+                            },
+                            "2834": {
+                                "description": "Pharmaceutical Preparations",
+                                "id": 2325,
+                                "children": {}
+                            },
+                            "2835": {
+                                "description": "Diagnostic Substances",
+                                "id": 2326,
+                                "children": {}
+                            },
+                            "2836": {
+                                "description": "Biological Products, Except Diagnostic",
+                                "id": 2327,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2840": {
+                        "description": "Soap, Cleaners & Toilet Goods",
+                        "id": 2328,
+                        "children": {
+                            "2842": {
+                                "description": "Polishes & Sanitation Goods",
+                                "id": 2329,
+                                "children": {}
+                            },
+                            "2844": {
+                                "description": "Perfumes & Cosmetics -Toilet Preparations",
+                                "id": 2330,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2850": {
+                        "description": "Paints & Allied Products",
+                        "id": 2331,
+                        "children": {
+                            "2851": {
+                                "description": "Paints & Allied Products",
+                                "id": 2332,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2860": {
+                        "description": "Industrial Organic Chemicals",
+                        "id": 2333,
+                        "children": {}
+                    },
+                    "2870": {
+                        "description": "Agricultural Chemicals",
+                        "id": 2334,
+                        "children": {}
+                    },
+                    "2890": {
+                        "description": "Miscellaneous Chemical Products",
+                        "id": 2335,
+                        "children": {
+                            "2891": {
+                                "description": "Adhesives & Sealants",
+                                "id": 2336,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "2900": {
+                "description": "PETROLEUM & COAL PRODUCTS",
+                "id": 2337,
+                "children": {
+                    "2910": {
+                        "description": "Petroleum Refining",
+                        "id": 2338,
+                        "children": {
+                            "2911": {
+                                "description": "Petroleum Refining",
+                                "id": 2339,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "2950": {
+                        "description": "Asphalt Paving & Roofing Materials",
+                        "id": 2340,
+                        "children": {}
+                    },
+                    "2990": {
+                        "description": "Miscellaneous Petroleum & Coal Products",
+                        "id": 2341,
+                        "children": {}
+                    }
+                }
+            },
+            "3000": {
+                "description": "RUBBER & MISCELLANEOUS PLASTICS PRODUCTS",
+                "id": 2342,
+                "children": {
+                    "3010": {
+                        "description": "Tires & Inner Tubes",
+                        "id": 2343,
+                        "children": {
+                            "3011": {
+                                "description": "Tires & Inner Tubes",
+                                "id": 2344,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3020": {
+                        "description": "Rubber & Plastics Footwear",
+                        "id": 2345,
+                        "children": {
+                            "3021": {
+                                "description": "Rubber & Plastics Footwear",
+                                "id": 2346,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3050": {
+                        "description": "Hose & Belting & Gaskets & Packing",
+                        "id": 2347,
+                        "children": {}
+                    },
+                    "3060": {
+                        "description": "Fabricated Rubber Products, nec",
+                        "id": 2348,
+                        "children": {}
+                    },
+                    "3080": {
+                        "description": "Miscellaneous Plastics Products, nec",
+                        "id": 2349,
+                        "children": {
+                            "3081": {
+                                "description": "Unsupported Plastics Film & Sheet",
+                                "id": 2350,
+                                "children": {}
+                            },
+                            "3086": {
+                                "description": "Plastics Foam Products",
+                                "id": 2351,
+                                "children": {}
+                            },
+                            "3089": {
+                                "description": "Plastics Products, nec",
+                                "id": 2352,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "3100": {
+                "description": "LEATHER & ALLIED PRODUCTS",
+                "id": 2353,
+                "children": {
+                    "3140": {
+                        "description": "Footwear, Except Rubber",
+                        "id": 2354,
+                        "children": {}
+                    }
+                }
+            },
+            "3200": {
+                "description": "STONE, CLAY & GLASS PRODUCTS",
+                "id": 2355,
+                "children": {
+                    "3210": {
+                        "description": "Flat Glass",
+                        "id": 2356,
+                        "children": {
+                            "3211": {
+                                "description": "Flat Glass",
+                                "id": 2357,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3220": {
+                        "description": "Glass & Glassware, Pressed or Blown",
+                        "id": 2358,
+                        "children": {
+                            "3221": {
+                                "description": "Glass Containers",
+                                "id": 2359,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3230": {
+                        "description": "Products of Purchased Glass",
+                        "id": 2360,
+                        "children": {
+                            "3231": {
+                                "description": "Products of Purchased Glass",
+                                "id": 2361,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3240": {
+                        "description": "Cement, Hydraulic",
+                        "id": 2362,
+                        "children": {
+                            "3241": {
+                                "description": "Cement, Hydraulic",
+                                "id": 2363,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3250": {
+                        "description": "Structural Clay Products",
+                        "id": 2364,
+                        "children": {}
+                    },
+                    "3260": {
+                        "description": "Pottery & Related Products",
+                        "id": 2365,
+                        "children": {}
+                    },
+                    "3270": {
+                        "description": "Concrete, Gypsum & Plaster Products",
+                        "id": 2366,
+                        "children": {
+                            "3272": {
+                                "description": "Concrete Products, nec",
+                                "id": 2367,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3280": {
+                        "description": "Cut Stone & Stone Products",
+                        "id": 2368,
+                        "children": {
+                            "3281": {
+                                "description": "Cut Stone & Stone Products",
+                                "id": 2369,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3290": {
+                        "description": "Miscellaneous Nonmetallic Mineral Products",
+                        "id": 2370,
+                        "children": {}
+                    }
+                }
+            },
+            "3300": {
+                "description": "PRIMARY METAL INDUSTRIES",
+                "id": 2371,
+                "children": {
+                    "3310": {
+                        "description": "Blast Furnace & Basic Steel Products",
+                        "id": 2372,
+                        "children": {
+                            "3312": {
+                                "description": "Blast Furnaces & Steel Mills",
+                                "id": 2373,
+                                "children": {}
+                            },
+                            "3317": {
+                                "description": "Steel Pipe & Tubes",
+                                "id": 2374,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3320": {
+                        "description": "Iron & Steel Foundries",
+                        "id": 2375,
+                        "children": {}
+                    },
+                    "3330": {
+                        "description": "Primary Nonferrous Metals",
+                        "id": 2376,
+                        "children": {
+                            "3334": {
+                                "description": "Primary Aluminum",
+                                "id": 2377,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3340": {
+                        "description": "Secondary Nonferrous Metals",
+                        "id": 2378,
+                        "children": {
+                            "3341": {
+                                "description": "Secondary Nonferrous Metals",
+                                "id": 2379,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3350": {
+                        "description": "Nonferrous Rolling & Drawing",
+                        "id": 2380,
+                        "children": {
+                            "3357": {
+                                "description": "Nonferrous Wiredrawing & Insulating",
+                                "id": 2381,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3360": {
+                        "description": "Nonferrous Foundries (Castings)",
+                        "id": 2382,
+                        "children": {}
+                    },
+                    "3390": {
+                        "description": "Miscellaneous Primary Metal Industries",
+                        "id": 2383,
+                        "children": {}
+                    }
+                }
+            },
+            "3400": {
+                "description": "FABRICATED METAL PRODUCTS",
+                "id": 2384,
+                "children": {
+                    "3410": {
+                        "description": "Metal Cans & Shipping Containers",
+                        "id": 2385,
+                        "children": {
+                            "3411": {
+                                "description": "Metal Cans",
+                                "id": 2386,
+                                "children": {}
+                            },
+                            "3412": {
+                                "description": "Metal Barrels, Drums & Pails",
+                                "id": 2387,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3420": {
+                        "description": "Cutlery, Handtools & Hardware",
+                        "id": 2388,
+                        "children": {}
+                    },
+                    "3430": {
+                        "description": "Plumbing & Heating, Except Electric",
+                        "id": 2389,
+                        "children": {
+                            "3433": {
+                                "description": "Heating Equipment, Except Electric",
+                                "id": 2390,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3440": {
+                        "description": "Fabricated Structural Metal Products",
+                        "id": 2391,
+                        "children": {
+                            "3442": {
+                                "description": "Metal Doors, Sash & Trim",
+                                "id": 2392,
+                                "children": {}
+                            },
+                            "3443": {
+                                "description": "Fabricated Plate Work (Boiler Shops)",
+                                "id": 2393,
+                                "children": {}
+                            },
+                            "3444": {
+                                "description": "Sheet Metal Work",
+                                "id": 2394,
+                                "children": {}
+                            },
+                            "3448": {
+                                "description": "Prefabricated Metal Buildings",
+                                "id": 2395,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3450": {
+                        "description": "Screw Machine Products, Bolts, Etc.",
+                        "id": 2396,
+                        "children": {
+                            "3451": {
+                                "description": "Screw Machine Products",
+                                "id": 2397,
+                                "children": {}
+                            },
+                            "3452": {
+                                "description": "Bolts, Nuts, Rivets & Washers",
+                                "id": 2398,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3460": {
+                        "description": "Metal Forgings & Stampings",
+                        "id": 2399,
+                        "children": {}
+                    },
+                    "3470": {
+                        "description": "Metal Services, nec",
+                        "id": 2400,
+                        "children": {}
+                    },
+                    "3480": {
+                        "description": "Ordnance & Accessories, nec",
+                        "id": 2401,
+                        "children": {}
+                    },
+                    "3490": {
+                        "description": "Miscellaneous Fabricated Metal Products",
+                        "id": 2402,
+                        "children": {}
+                    }
+                }
+            },
+            "3500": {
+                "description": "INDUSTRIAL MACHINERY & EQUIPMENT",
+                "id": 2403,
+                "children": {
+                    "3510": {
+                        "description": "Engines & Turbines",
+                        "id": 2404,
+                        "children": {}
+                    },
+                    "3520": {
+                        "description": "Farm & Garden Machinery",
+                        "id": 2405,
+                        "children": {
+                            "3523": {
+                                "description": "Farm Machinery & Equipment",
+                                "id": 2406,
+                                "children": {}
+                            },
+                            "3524": {
+                                "description": "Lawn & Garden Equipment",
+                                "id": 2407,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3530": {
+                        "description": "Construction & Related Machinery",
+                        "id": 2408,
+                        "children": {
+                            "3531": {
+                                "description": "Construction Machinery",
+                                "id": 2409,
+                                "children": {}
+                            },
+                            "3532": {
+                                "description": "Mining Machinery",
+                                "id": 2410,
+                                "children": {}
+                            },
+                            "3533": {
+                                "description": "Oil & Gas Field Machinery",
+                                "id": 2411,
+                                "children": {}
+                            },
+                            "3537": {
+                                "description": "Industrial Trucks & Tractors",
+                                "id": 2412,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3540": {
+                        "description": "Metalworking Machinery",
+                        "id": 2413,
+                        "children": {
+                            "3541": {
+                                "description": "Machine Tools, Metal Cutting Types",
+                                "id": 2414,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3550": {
+                        "description": "Special Industry Machinery",
+                        "id": 2415,
+                        "children": {
+                            "3555": {
+                                "description": "Printing Trades Machinery",
+                                "id": 2416,
+                                "children": {}
+                            },
+                            "3559": {
+                                "description": "Special Industry Machinery, nec",
+                                "id": 2417,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3560": {
+                        "description": "General Industry Machinery",
+                        "id": 2418,
+                        "children": {
+                            "3561": {
+                                "description": "Pumps & Pumping Equipment",
+                                "id": 2419,
+                                "children": {}
+                            },
+                            "3562": {
+                                "description": "Ball & Roller Bearings",
+                                "id": 2420,
+                                "children": {}
+                            },
+                            "3564": {
+                                "description": "Blowers & Fans",
+                                "id": 2421,
+                                "children": {}
+                            },
+                            "3567": {
+                                "description": "Industrial Furnaces & Ovens",
+                                "id": 2422,
+                                "children": {}
+                            },
+                            "3569": {
+                                "description": "General Industrial Machinery, nec",
+                                "id": 2423,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3570": {
+                        "description": "Computer & Office Equipment",
+                        "id": 2424,
+                        "children": {
+                            "3571": {
+                                "description": "Electronic Computers",
+                                "id": 2425,
+                                "children": {}
+                            },
+                            "3572": {
+                                "description": "Computer Storage Devices",
+                                "id": 2426,
+                                "children": {}
+                            },
+                            "3575": {
+                                "description": "Computer Terminals",
+                                "id": 2427,
+                                "children": {}
+                            },
+                            "3576": {
+                                "description": "Computer Communications Equipment",
+                                "id": 4315,
+                                "children": {}
+                            },
+                            "3577": {
+                                "description": "Computer Peripheral Equipment, nec",
+                                "id": 2428,
+                                "children": {}
+                            },
+                            "3578": {
+                                "description": "Calculating & Accounting Equipment",
+                                "id": 2429,
+                                "children": {}
+                            },
+                            "3579": {
+                                "description": "Office Machines, nec",
+                                "id": 2430,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3580": {
+                        "description": "Refrigeration & Service Industry",
+                        "id": 2431,
+                        "children": {
+                            "3585": {
+                                "description": "Refrigeration & Heating Equipment",
+                                "id": 2432,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3590": {
+                        "description": "Industrial Machinery, nec",
+                        "id": 2433,
+                        "children": {}
+                    }
+                }
+            },
+            "3600": {
+                "description": "ELECTRONIC & OTHER ELECTRIC INDUSTRIES",
+                "id": 2434,
+                "children": {
+                    "3610": {
+                        "description": "Electric Distribution Equipment",
+                        "id": 2435,
+                        "children": {
+                            "3612": {
+                                "description": "Transformers, Except Electronic",
+                                "id": 2436,
+                                "children": {}
+                            },
+                            "3613": {
+                                "description": "Switchgear & Switchboard Apparatus",
+                                "id": 2437,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3620": {
+                        "description": "Electrical Industrial Apparatus",
+                        "id": 2438,
+                        "children": {
+                            "3621": {
+                                "description": "Motors & Generators",
+                                "id": 2439,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3630": {
+                        "description": "Household Appliances",
+                        "id": 2440,
+                        "children": {
+                            "3634": {
+                                "description": "Electric Housewares & Fans",
+                                "id": 2441,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3640": {
+                        "description": "Electric Lighting & Wiring Equipment",
+                        "id": 2442,
+                        "children": {}
+                    },
+                    "3650": {
+                        "description": "Household Audio & Video Equipment",
+                        "id": 2443,
+                        "children": {
+                            "3651": {
+                                "description": "Household Audio & Video Equipment",
+                                "id": 2444,
+                                "children": {}
+                            },
+                            "3652": {
+                                "description": "Prerecorded Records & Tapes",
+                                "id": 2445,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3660": {
+                        "description": "Communications Equipment",
+                        "id": 2446,
+                        "children": {
+                            "3661": {
+                                "description": "Telephone & Telegraph Apparatus",
+                                "id": 2447,
+                                "children": {}
+                            },
+                            "3663": {
+                                "description": "Radio & TV Communications Equipment",
+                                "id": 2448,
+                                "children": {}
+                            },
+                            "3669": {
+                                "description": "Communications Equipment, nec",
+                                "id": 2449,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3670": {
+                        "description": "Electronic Components & Accessories",
+                        "id": 2450,
+                        "children": {
+                            "3672": {
+                                "description": "Printed Circuit Boards",
+                                "id": 2451,
+                                "children": {}
+                            },
+                            "3674": {
+                                "description": "Semiconductors & Related Devices",
+                                "id": 2452,
+                                "children": {}
+                            },
+                            "3677": {
+                                "description": "Electronic Coils & Transformers",
+                                "id": 2453,
+                                "children": {}
+                            },
+                            "3678": {
+                                "description": "Electronic Connectors",
+                                "id": 2454,
+                                "children": {}
+                            },
+                            "3679": {
+                                "description": "Electronic Components, nec",
+                                "id": 2455,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3690": {
+                        "description": "Miscellaneous Electrical Equipment & Supplies",
+                        "id": 2456,
+                        "children": {
+                            "3695": {
+                                "description": "Magnetic & Optical Recording Media",
+                                "id": 2457,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "3700": {
+                "description": "TRANSPORTATION EQUIPMENT",
+                "id": 2458,
+                "children": {
+                    "3710": {
+                        "description": "Motor Vehicles & Equipment",
+                        "id": 2459,
+                        "children": {
+                            "3711": {
+                                "description": "Motor Vehicles & Car Bodies",
+                                "id": 2460,
+                                "children": {}
+                            },
+                            "3713": {
+                                "description": "Truck & Bus Bodies",
+                                "id": 2461,
+                                "children": {}
+                            },
+                            "3714": {
+                                "description": "Motor Vehicle Parts & Accessories",
+                                "id": 2462,
+                                "children": {}
+                            },
+                            "3715": {
+                                "description": "Truck Trailers",
+                                "id": 2463,
+                                "children": {}
+                            },
+                            "3716": {
+                                "description": "Motor Homes",
+                                "id": 2464,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3720": {
+                        "description": "Aircraft & Parts",
+                        "id": 2465,
+                        "children": {
+                            "3721": {
+                                "description": "Aircraft",
+                                "id": 2466,
+                                "children": {}
+                            },
+                            "3724": {
+                                "description": "Aircraft Engines & Engine Parts",
+                                "id": 2467,
+                                "children": {}
+                            },
+                            "3728": {
+                                "description": "Aircraft Parts & Equipment, nec",
+                                "id": 2468,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3730": {
+                        "description": "Ship & Boat Building & Repairing",
+                        "id": 2469,
+                        "children": {}
+                    },
+                    "3740": {
+                        "description": "Railroad Equipment",
+                        "id": 2470,
+                        "children": {
+                            "3743": {
+                                "description": "Railroad Equipment",
+                                "id": 2471,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3750": {
+                        "description": "Motorcycles, Bicycles & Parts",
+                        "id": 2472,
+                        "children": {
+                            "3751": {
+                                "description": "Motorcycles, Bicycles & Parts",
+                                "id": 2473,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3760": {
+                        "description": "Guided Missiles, Space Vehicles, Parts",
+                        "id": 2474,
+                        "children": {}
+                    },
+                    "3790": {
+                        "description": "Miscellaneous Transportation Equipment",
+                        "id": 2475,
+                        "children": {}
+                    }
+                }
+            },
+            "3800": {
+                "description": "INSTRUMENTS & RELATED PRODUCTS",
+                "id": 2476,
+                "children": {
+                    "3810": {
+                        "description": "Search & Navigation Equipment",
+                        "id": 2477,
+                        "children": {
+                            "3812": {
+                                "description": "Search & Navigation Equipment",
+                                "id": 2478,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3820": {
+                        "description": "Measuring & Controlling Devices",
+                        "id": 2479,
+                        "children": {
+                            "3821": {
+                                "description": "Laboratory Apparatus & Furniture",
+                                "id": 2480,
+                                "children": {}
+                            },
+                            "3822": {
+                                "description": "Environmental Controls",
+                                "id": 2481,
+                                "children": {}
+                            },
+                            "3823": {
+                                "description": "Process Control Instruments",
+                                "id": 2482,
+                                "children": {}
+                            },
+                            "3824": {
+                                "description": "Fluid Meters & Counting Devices",
+                                "id": 2483,
+                                "children": {}
+                            },
+                            "3825": {
+                                "description": "Instruments to Measure Electricity",
+                                "id": 2484,
+                                "children": {}
+                            },
+                            "3826": {
+                                "description": "Analytical Instruments",
+                                "id": 2485,
+                                "children": {}
+                            },
+                            "3827": {
+                                "description": "Optical Instruments & Lenses",
+                                "id": 2486,
+                                "children": {}
+                            },
+                            "3829": {
+                                "description": "Measuring & Controlling Devices, nec",
+                                "id": 2487,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3840": {
+                        "description": "Medical Instruments & Supplies",
+                        "id": 2488,
+                        "children": {
+                            "3841": {
+                                "description": "Surgical & Medical Instruments",
+                                "id": 2489,
+                                "children": {}
+                            },
+                            "3842": {
+                                "description": "Surgical Appliances & Supplies",
+                                "id": 2490,
+                                "children": {}
+                            },
+                            "3843": {
+                                "description": "Dental Equipment & Supplies",
+                                "id": 2491,
+                                "children": {}
+                            },
+                            "3844": {
+                                "description": "X-Ray Apparatus & Tubes",
+                                "id": 2492,
+                                "children": {}
+                            },
+                            "3845": {
+                                "description": "Electromedical Equipment",
+                                "id": 2493,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3850": {
+                        "description": "Ophthalmic Goods",
+                        "id": 2494,
+                        "children": {
+                            "3851": {
+                                "description": "Ophthalmic Goods",
+                                "id": 2495,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3860": {
+                        "description": "Photographic Equipment & Supplies",
+                        "id": 2496,
+                        "children": {
+                            "3861": {
+                                "description": "Photographic Equipment & Supplies",
+                                "id": 2497,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3870": {
+                        "description": "Watches, Clocks, Watchcases & Parts",
+                        "id": 2498,
+                        "children": {
+                            "3873": {
+                                "description": "Watches, Clocks, Watchcases & Parts",
+                                "id": 2499,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "3900": {
+                "description": "MISCELLANEOUS MANUFACTURING INDUSTRIES",
+                "id": 2500,
+                "children": {
+                    "3910": {
+                        "description": "Jewelry, Silverware & Plated Ware",
+                        "id": 2501,
+                        "children": {
+                            "3911": {
+                                "description": "Jewelry, Precious Metal",
+                                "id": 2502,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3930": {
+                        "description": "Musical Instruments",
+                        "id": 2503,
+                        "children": {
+                            "3931": {
+                                "description": "Musical Instruments",
+                                "id": 2504,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3940": {
+                        "description": "Toys & Sporting Goods",
+                        "id": 2505,
+                        "children": {
+                            "3942": {
+                                "description": "Dolls & Stuffed Toys",
+                                "id": 2506,
+                                "children": {}
+                            },
+                            "3944": {
+                                "description": "Games, Toys & Children's Vehicles",
+                                "id": 2507,
+                                "children": {}
+                            },
+                            "3949": {
+                                "description": "Sporting & Athletic Goods, nec",
+                                "id": 2508,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "3950": {
+                        "description": "Pens, Pencils, Office & Art Supplies",
+                        "id": 2509,
+                        "children": {}
+                    },
+                    "3960": {
+                        "description": "Costume Jewelry & Notions",
+                        "id": 2510,
+                        "children": {}
+                    },
+                    "3990": {
+                        "description": "Miscellaneous Manufacturers",
+                        "id": 2511,
+                        "children": {}
+                    }
+                }
+            }
+        }
+    },
+    "40": {
+        "description": "Transportation, Communications, Eletric, Gas and Sanitary Services",
+        "id": 2792,
+        "children": {
+            "4000": {
+                "description": "RAILROAD TRANSPORTATION",
+                "id": 2512,
+                "children": {
+                    "4010": {
+                        "description": "Railroads",
+                        "id": 2513,
+                        "children": {
+                            "4011": {
+                                "description": "Railroads Line-Haul Operating",
+                                "id": 2514,
+                                "children": {}
+                            },
+                            "4013": {
+                                "description": "Switching & Terminal Devices",
+                                "id": 2515,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "4100": {
+                "description": "LOCAL & INTERURBAN PASSENGER TRANSIT",
+                "id": 2516,
+                "children": {}
+            },
+            "4200": {
+                "description": "TRUCKING & WAREHOUSING",
+                "id": 2517,
+                "children": {
+                    "4210": {
+                        "description": "Trucking & Courier Services, Except Air",
+                        "id": 2518,
+                        "children": {
+                            "4213": {
+                                "description": "Trucking, Except Local",
+                                "id": 2519,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4220": {
+                        "description": "Public Warehousing & Storage",
+                        "id": 2520,
+                        "children": {}
+                    },
+                    "4230": {
+                        "description": "Trucking Terminal Facilities",
+                        "id": 2521,
+                        "children": {
+                            "4231": {
+                                "description": "Trucking Terminal Facilities",
+                                "id": 2522,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "4400": {
+                "description": "WATER TRANSPORTATION",
+                "id": 2523,
+                "children": {
+                    "4410": {
+                        "description": "Deep Sea Foreign Transport of Freight",
+                        "id": 2524,
+                        "children": {
+                            "4412": {
+                                "description": "Deep Sea Foreign Transport of Freight",
+                                "id": 2525,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "4500": {
+                "description": "TRANSPORT BY AIR",
+                "id": 2526,
+                "children": {
+                    "4510": {
+                        "description": "Air Transportation, Scheduled",
+                        "id": 2527,
+                        "children": {
+                            "4512": {
+                                "description": "Air Transportation, Scheduled",
+                                "id": 2528,
+                                "children": {}
+                            },
+                            "4513": {
+                                "description": "Air Courier Services",
+                                "id": 2529,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4520": {
+                        "description": "Air Transportation, Nonscheduled",
+                        "id": 2530,
+                        "children": {
+                            "4522": {
+                                "description": "Air Transportation, Nonscheduled",
+                                "id": 2531,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4580": {
+                        "description": "Airports, Flying Fields & Services",
+                        "id": 2532,
+                        "children": {
+                            "4581": {
+                                "description": "Airports, Flying Fields & Services",
+                                "id": 2533,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "4600": {
+                "description": "PIPELINES, EXCEPT NATURAL GAS",
+                "id": 2534,
+                "children": {
+                    "4610": {
+                        "description": "Pipelines, Except Natural Gas",
+                        "id": 2535,
+                        "children": {}
+                    }
+                }
+            },
+            "4700": {
+                "description": "TRANSPORTATION SERVICES",
+                "id": 2536,
+                "children": {
+                    "4730": {
+                        "description": "Freight Transportation Arrangement",
+                        "id": 2537,
+                        "children": {
+                            "4731": {
+                                "description": "Freight Transportation Arrangement",
+                                "id": 2538,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "4800": {
+                "description": "COMMUNICATIONS",
+                "id": 2539,
+                "children": {
+                    "4810": {
+                        "description": "Telephone Communications",
+                        "id": 2540,
+                        "children": {
+                            "4812": {
+                                "description": "Radiotelephone Communications",
+                                "id": 2541,
+                                "children": {}
+                            },
+                            "4813": {
+                                "description": "Telephone Communications, Except Radio",
+                                "id": 2542,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4820": {
+                        "description": "Telegraph & Other Communications",
+                        "id": 2543,
+                        "children": {
+                            "4822": {
+                                "description": "Telegraph & Other Communications",
+                                "id": 2544,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4830": {
+                        "description": "Radio & Television Broadcasting",
+                        "id": 2545,
+                        "children": {
+                            "4832": {
+                                "description": "Radio Broadcasting Stations",
+                                "id": 2546,
+                                "children": {}
+                            },
+                            "4833": {
+                                "description": "Television Broadcasting Stations",
+                                "id": 2547,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4840": {
+                        "description": "Cable & Other Pay TV Services",
+                        "id": 2548,
+                        "children": {
+                            "4841": {
+                                "description": "Cable & Other Pay TV Services",
+                                "id": 2549,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4890": {
+                        "description": "Communications Services, nec",
+                        "id": 2550,
+                        "children": {
+                            "4899": {
+                                "description": "Communications Services, nec",
+                                "id": 2551,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "4900": {
+                "description": "ELECTRIC, GAS & SANITARY SERVICES",
+                "id": 2552,
+                "children": {
+                    "4910": {
+                        "description": "Electric Services",
+                        "id": 2553,
+                        "children": {
+                            "4911": {
+                                "description": "Electric Services",
+                                "id": 2554,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4920": {
+                        "description": "Gas Production & Distribution",
+                        "id": 2555,
+                        "children": {
+                            "4922": {
+                                "description": "Natural Gas Transmission",
+                                "id": 2556,
+                                "children": {}
+                            },
+                            "4923": {
+                                "description": "Gas Transmission & Distribution",
+                                "id": 2557,
+                                "children": {}
+                            },
+                            "4924": {
+                                "description": "Natural Gas Distribution",
+                                "id": 2558,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4930": {
+                        "description": "Combination Utility Services",
+                        "id": 2559,
+                        "children": {
+                            "4931": {
+                                "description": "Electric & Other Services Combined",
+                                "id": 2560,
+                                "children": {}
+                            },
+                            "4932": {
+                                "description": "Gas & Other Services Combined",
+                                "id": 2561,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4940": {
+                        "description": "Water Supply",
+                        "id": 2562,
+                        "children": {
+                            "4941": {
+                                "description": "Water Supply",
+                                "id": 2563,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4950": {
+                        "description": "Sanitary Services",
+                        "id": 2564,
+                        "children": {
+                            "4953": {
+                                "description": "Refuse Systems",
+                                "id": 2565,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4960": {
+                        "description": "Steam & Air Conditioning Supply",
+                        "id": 2566,
+                        "children": {
+                            "4961": {
+                                "description": "Steam & Air Conditioning Supply",
+                                "id": 2567,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "4955": {
+                        "description": "Hazardous Waste Management",
+                        "id": 4316,
+                        "children": {}
+                    }
+                }
+            },
+            "4990": {
+                "description": "Hazardous Waste Management",
+                "id": 4317,
+                "children": {
+                    "4991": {
+                        "description": "Hazardous Waste Management",
+                        "id": 4318,
+                        "children": {}
+                    }
+                }
+            }
+        }
+    },
+    "50": {
+        "description": "Wholesale Trade",
+        "id": 2793,
+        "children": {
+            "5000": {
+                "description": "WHOLESALE TRADE - DURABLE GOODS",
+                "id": 2568,
+                "children": {
+                    "5010": {
+                        "description": "Motor Vehicles, Parts & Supplies",
+                        "id": 2569,
+                        "children": {
+                            "5013": {
+                                "description": "Motor Vehicle Supplies & New Parts",
+                                "id": 2570,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5020": {
+                        "description": "Furniture & Home Furnishings",
+                        "id": 2571,
+                        "children": {}
+                    },
+                    "5030": {
+                        "description": "Lumber & Construction Materials",
+                        "id": 2572,
+                        "children": {
+                            "5031": {
+                                "description": "Lumber, Plywood & Millwork",
+                                "id": 2573,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5040": {
+                        "description": "Professional & Commercial Equipment",
+                        "id": 2574,
+                        "children": {
+                            "5045": {
+                                "description": "Computers, Peripherals & Software",
+                                "id": 2575,
+                                "children": {}
+                            },
+                            "5047": {
+                                "description": "Medical & Hospital Equipment",
+                                "id": 2576,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5050": {
+                        "description": "Metals & Minerals, Except Petroleum",
+                        "id": 2577,
+                        "children": {
+                            "5051": {
+                                "description": "Metals Service Centers & Offices",
+                                "id": 2578,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5060": {
+                        "description": "Electrical Goods",
+                        "id": 2579,
+                        "children": {
+                            "5063": {
+                                "description": "Electrical Apparatus & Equipment",
+                                "id": 2580,
+                                "children": {}
+                            },
+                            "5064": {
+                                "description": "Electrical Appliances, TV & Radios",
+                                "id": 2581,
+                                "children": {}
+                            },
+                            "5065": {
+                                "description": "Electronic Parts & Equipment",
+                                "id": 2582,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5070": {
+                        "description": "Hardware, Plumbing & Heating Equipment",
+                        "id": 2583,
+                        "children": {
+                            "5072": {
+                                "description": "Hardware",
+                                "id": 2584,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5080": {
+                        "description": "Machinery Equipment & Supplies",
+                        "id": 2585,
+                        "children": {
+                            "5082": {
+                                "description": "Construction & Mining Machinery",
+                                "id": 2586,
+                                "children": {}
+                            },
+                            "5084": {
+                                "description": "Industrial Machinery & Equipment",
+                                "id": 2587,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5090": {
+                        "description": "Miscellaneous Durable Goods",
+                        "id": 2588,
+                        "children": {
+                            "5094": {
+                                "description": "Jewelry & Precious Stones",
+                                "id": 2589,
+                                "children": {}
+                            },
+                            "5099": {
+                                "description": "Durable Goods, nec",
+                                "id": 2590,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5100": {
+                "description": "WHOLESALE TRADE - NONDURABLE GOODS",
+                "id": 2591,
+                "children": {
+                    "5110": {
+                        "description": "Paper & Paper Products",
+                        "id": 2592,
+                        "children": {}
+                    },
+                    "5120": {
+                        "description": "Drugs, Proprietaries & Sundries",
+                        "id": 2593,
+                        "children": {
+                            "5122": {
+                                "description": "Drugs, Proprietaries & Sundries",
+                                "id": 2594,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5130": {
+                        "description": "Apparel, Piece Goods & Notations",
+                        "id": 2595,
+                        "children": {}
+                    },
+                    "5140": {
+                        "description": "Groceries & Related Products",
+                        "id": 2596,
+                        "children": {
+                            "5141": {
+                                "description": "Groceries, General Line",
+                                "id": 2597,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5150": {
+                        "description": "Farm-Product Raw Materials",
+                        "id": 2598,
+                        "children": {}
+                    },
+                    "5160": {
+                        "description": "Chemicals & Allied Products",
+                        "id": 2599,
+                        "children": {}
+                    },
+                    "5170": {
+                        "description": "Petroleum & Petroleum Products",
+                        "id": 2600,
+                        "children": {
+                            "5171": {
+                                "description": "Petroleum Bulk Stations &Terminals",
+                                "id": 2601,
+                                "children": {}
+                            },
+                            "5172": {
+                                "description": "Petroleum Products, nec",
+                                "id": 2602,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5180": {
+                        "description": "Beer, Wine & Distilled Beverages",
+                        "id": 2603,
+                        "children": {}
+                    },
+                    "5190": {
+                        "description": "Miscellaneous Nondurable Goods",
+                        "id": 2604,
+                        "children": {}
+                    }
+                }
+            }
+        }
+    },
+    "52": {
+        "description": "Retail Trade",
+        "id": 2794,
+        "children": {
+            "5200": {
+                "description": "BUILDING MATERIALS & GARDEN SUPPLIES",
+                "id": 2605,
+                "children": {
+                    "5210": {
+                        "description": "Lumber & Other Building Materials",
+                        "id": 2606,
+                        "children": {
+                            "5211": {
+                                "description": "Lumber & Other Building Materials",
+                                "id": 2607,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5270": {
+                        "description": "Mobile Homes Dealers",
+                        "id": 2608,
+                        "children": {
+                            "5271": {
+                                "description": "Mobile Homes Dealers",
+                                "id": 2609,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5300": {
+                "description": "GENERAL MERCHANDISE STORES",
+                "id": 2610,
+                "children": {
+                    "5310": {
+                        "description": "Department Stores",
+                        "id": 2611,
+                        "children": {
+                            "5311": {
+                                "description": "Department Stores",
+                                "id": 2612,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5330": {
+                        "description": "Variety Stores",
+                        "id": 2613,
+                        "children": {
+                            "5331": {
+                                "description": "Variety Stores",
+                                "id": 2614,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5390": {
+                        "description": "Miscellaneous General Merchandise Stores",
+                        "id": 2615,
+                        "children": {
+                            "5399": {
+                                "description": "Miscellaneous General Merchandise Stores",
+                                "id": 2616,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5400": {
+                "description": "FOOD STORES",
+                "id": 2617,
+                "children": {
+                    "5410": {
+                        "description": "Grocery Stores",
+                        "id": 2618,
+                        "children": {
+                            "5411": {
+                                "description": "Grocery Stores",
+                                "id": 2619,
+                                "children": {}
+                            },
+                            "5412": {
+                                "description": "Convenience Stores",
+                                "id": 4319,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5500": {
+                "description": "AUTOMOTIVE DEALERS & SERVICE STATIONS",
+                "id": 2620,
+                "children": {
+                    "5530": {
+                        "description": "Auto & Home Supply Stores",
+                        "id": 2621,
+                        "children": {
+                            "5531": {
+                                "description": "Auto & Home Supply Stores",
+                                "id": 2622,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5600": {
+                "description": "APPAREL & ACCESSORY STORES",
+                "id": 2623,
+                "children": {
+                    "5620": {
+                        "description": "Women's Clothing Stores",
+                        "id": 2624,
+                        "children": {
+                            "5621": {
+                                "description": "Women's Clothing Stores",
+                                "id": 2625,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5650": {
+                        "description": "Family Clothing Stores",
+                        "id": 2626,
+                        "children": {
+                            "5651": {
+                                "description": "Family Clothing Stores",
+                                "id": 2627,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5660": {
+                        "description": "Shoe Stores",
+                        "id": 2628,
+                        "children": {
+                            "5661": {
+                                "description": "Shoe Stores",
+                                "id": 2629,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5700": {
+                "description": "FURNITURE & HOMEFURNISHING STORES",
+                "id": 2630,
+                "children": {
+                    "5710": {
+                        "description": "Furniture & Homefurnishing Stores",
+                        "id": 2631,
+                        "children": {
+                            "5712": {
+                                "description": "Furniture Stores",
+                                "id": 2632,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5730": {
+                        "description": "Radio, Television & Computer Stores",
+                        "id": 2633,
+                        "children": {
+                            "5731": {
+                                "description": "Radio, TV & Electronic Stores",
+                                "id": 2634,
+                                "children": {}
+                            },
+                            "5734": {
+                                "description": "Computer & Software Stores",
+                                "id": 2635,
+                                "children": {}
+                            },
+                            "5735": {
+                                "description": "Record & Prerecorded Tape Stores",
+                                "id": 2636,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5800": {
+                "description": "EATING & DRINKING PLACES",
+                "id": 2637,
+                "children": {
+                    "5810": {
+                        "description": "Eating & Drinking Places",
+                        "id": 2638,
+                        "children": {
+                            "5812": {
+                                "description": "Caterers & Banquet Halls",
+                                "id": 2639,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "5900": {
+                "description": "MISCELLANEOUS RETAIL",
+                "id": 2640,
+                "children": {
+                    "5910": {
+                        "description": "Drug Stores & Proprietary Stores",
+                        "id": 2641,
+                        "children": {
+                            "5912": {
+                                "description": "Drug Stores & Proprietary Stores",
+                                "id": 2642,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5940": {
+                        "description": "Miscellaneous Shopping Goods Stores",
+                        "id": 2643,
+                        "children": {
+                            "5944": {
+                                "description": "Jewelers Stores",
+                                "id": 2644,
+                                "children": {}
+                            },
+                            "5945": {
+                                "description": "Hobby, Toy & Game Shops",
+                                "id": 2645,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5960": {
+                        "description": "Nonstore Retailers",
+                        "id": 2646,
+                        "children": {
+                            "5961": {
+                                "description": "Catalog & Mail Order Houses",
+                                "id": 2647,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "5990": {
+                        "description": "Retail Stores, nec",
+                        "id": 2648,
+                        "children": {}
+                    }
+                }
+            }
+        }
+    },
+    "60": {
+        "description": "Finance, Insurance, and Real Estate",
+        "id": 2795,
+        "children": {
+            "6000": {
+                "description": "DEPOSITORY INSTITUTIONS",
+                "id": 2649,
+                "children": {
+                    "6020": {
+                        "description": "Commercial Banks",
+                        "id": 2650,
+                        "children": {
+                            "6021": {
+                                "description": "National Commercial Banks",
+                                "id": 2651,
+                                "children": {}
+                            },
+                            "6022": {
+                                "description": "State Commercial Banks",
+                                "id": 2652,
+                                "children": {}
+                            },
+                            "6029": {
+                                "description": "Commercial Banks, nec",
+                                "id": 2653,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6030": {
+                        "description": "Savings Institutions",
+                        "id": 2654,
+                        "children": {
+                            "6035": {
+                                "description": "Federal Savings Institutions",
+                                "id": 2655,
+                                "children": {}
+                            },
+                            "6036": {
+                                "description": "Savings Institutions, Except Federal",
+                                "id": 2656,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6090": {
+                        "description": "Functions Closely Related to Banking",
+                        "id": 2657,
+                        "children": {
+                            "6099": {
+                                "description": "Functions Related to Deposit Banking",
+                                "id": 2658,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "6100": {
+                "description": "NONDEPOSITORY INSTITUTIONS",
+                "id": 2659,
+                "children": {
+                    "6110": {
+                        "description": "Federal & Federally Sponsored Credit Agencies",
+                        "id": 2660,
+                        "children": {
+                            "6111": {
+                                "description": "Federal & Federally Sponsored Credit Agencies",
+                                "id": 2661,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6140": {
+                        "description": "Personal Credit Unions",
+                        "id": 2662,
+                        "children": {
+                            "6141": {
+                                "description": "Personal Credit Unions",
+                                "id": 2663,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6150": {
+                        "description": "Business Credit Institutions",
+                        "id": 2664,
+                        "children": {
+                            "6153": {
+                                "description": "Short Term Business Credit",
+                                "id": 2665,
+                                "children": {}
+                            },
+                            "6159": {
+                                "description": "Misc. Business Credit Institutions",
+                                "id": 2666,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6160": {
+                        "description": "Mortgage Bankers & Brokers",
+                        "id": 2667,
+                        "children": {
+                            "6162": {
+                                "description": "Mortgage Bankers & Correspondents",
+                                "id": 2668,
+                                "children": {}
+                            },
+                            "6163": {
+                                "description": "Loan Brokers",
+                                "id": 2669,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6170": {
+                        "description": "Finance Lessors",
+                        "id": 4320,
+                        "children": {
+                            "6172": {
+                                "description": "Finance Lessors",
+                                "id": 4340,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6180": {
+                        "description": "Asset Backed Securities",
+                        "id": 4322,
+                        "children": {
+                            "6189": {
+                                "description": "Asset Backed Securities",
+                                "id": 4323,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6190": {
+                        "description": "Financial Services",
+                        "id": 4324,
+                        "children": {
+                            "6199": {
+                                "description": "Financial Services",
+                                "id": 4325,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "6200": {
+                "description": "SECURITY & COMMODITY BROKERS",
+                "id": 2670,
+                "children": {
+                    "6210": {
+                        "description": "Security Brokers & Dealers",
+                        "id": 2671,
+                        "children": {
+                            "6211": {
+                                "description": "Security Brokers & Dealers",
+                                "id": 2672,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6220": {
+                        "description": "Commodity Contracts Brokers, Dealers",
+                        "id": 2673,
+                        "children": {
+                            "6221": {
+                                "description": "Commodity Contracts Brokers, Dealers",
+                                "id": 2674,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6280": {
+                        "description": "Security & Commodity Services",
+                        "id": 2675,
+                        "children": {
+                            "6282": {
+                                "description": "Investment Advice",
+                                "id": 2676,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "6300": {
+                "description": "INSURANCE CARRIERS",
+                "id": 2677,
+                "children": {
+                    "6310": {
+                        "description": "Life Insurance",
+                        "id": 2678,
+                        "children": {
+                            "6311": {
+                                "description": "Life Insurance",
+                                "id": 2679,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6320": {
+                        "description": "Medical Service & Health Insurance",
+                        "id": 2680,
+                        "children": {
+                            "6321": {
+                                "description": "Accident & Health Insurance",
+                                "id": 2681,
+                                "children": {}
+                            },
+                            "6324": {
+                                "description": "Hospital & Medical Service Plans",
+                                "id": 2682,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6330": {
+                        "description": "Fire, Marine & Casualty Insurance",
+                        "id": 2683,
+                        "children": {
+                            "6331": {
+                                "description": "Fire, Marine & Casualty Insurance",
+                                "id": 2684,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6350": {
+                        "description": "Surety Insurance",
+                        "id": 2685,
+                        "children": {
+                            "6351": {
+                                "description": "Surety Insurance",
+                                "id": 2686,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6360": {
+                        "description": "Title Insurance",
+                        "id": 2687,
+                        "children": {
+                            "6361": {
+                                "description": "Title Insurance",
+                                "id": 2688,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6390": {
+                        "description": "Insurance Carriers, nec",
+                        "id": 2689,
+                        "children": {
+                            "6399": {
+                                "description": "Insurance Carriers, nec",
+                                "id": 2690,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "6400": {
+                "description": "INSURANCE AGENTS, BROKERS & SERVICE",
+                "id": 2691,
+                "children": {
+                    "6410": {
+                        "description": "Insurance Agents, Brokers & Service",
+                        "id": 2692,
+                        "children": {
+                            "6411": {
+                                "description": "Insurance Agents, Brokers & Service",
+                                "id": 2693,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "6500": {
+                "description": "REAL ESTATE",
+                "id": 2694,
+                "children": {
+                    "6510": {
+                        "description": "Real Estate Operators & Lessors",
+                        "id": 2695,
+                        "children": {
+                            "6512": {
+                                "description": "Nonresidential Building Operators",
+                                "id": 2696,
+                                "children": {}
+                            },
+                            "6513": {
+                                "description": "Apartment Building Operators",
+                                "id": 2697,
+                                "children": {}
+                            },
+                            "6519": {
+                                "description": "Real Property Lessors, nec",
+                                "id": 2698,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6530": {
+                        "description": "Real Estate Agents & Managers",
+                        "id": 2699,
+                        "children": {
+                            "6531": {
+                                "description": "Real Estate Agents & Managers",
+                                "id": 2700,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6550": {
+                        "description": "Subdividers & Developers",
+                        "id": 2701,
+                        "children": {
+                            "6552": {
+                                "description": "Subdividers & Developers, nec",
+                                "id": 2702,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "6532": {
+                        "description": "Real Estate Dealers (for their own account)",
+                        "id": 4326,
+                        "children": {}
+                    }
+                }
+            },
+            "6700": {
+                "description": "HOLDING & OTHER INVESTMENT OFFICES",
+                "id": 2703,
+                "children": {
+                    "6770": {
+                        "description": "Blank Checks",
+                        "id": 4327,
+                        "children": {}
+                    },
+                    "6790": {
+                        "description": "Miscellaneous Investing",
+                        "id": 2704,
+                        "children": {
+                            "6792": {
+                                "description": "Oil Royalty Traders",
+                                "id": 2705,
+                                "children": {}
+                            },
+                            "6794": {
+                                "description": "Patent Owners & Lessors",
+                                "id": 2706,
+                                "children": {}
+                            },
+                            "6795": {
+                                "description": "Mineral Royalty Traders",
+                                "id": 4328,
+                                "children": {}
+                            },
+                            "6798": {
+                                "description": "Real Estate Investment Trusts",
+                                "id": 2707,
+                                "children": {}
+                            },
+                            "6799": {
+                                "description": "Investors, nec",
+                                "id": 2708,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "70": {
+        "description": "Services",
+        "id": 2796,
+        "children": {
+            "7000": {
+                "description": "HOTELS & OTHER LODGING PLACES",
+                "id": 2709,
+                "children": {
+                    "7010": {
+                        "description": "Hotels & Motels",
+                        "id": 2710,
+                        "children": {
+                            "7011": {
+                                "description": "Hotels & Motels",
+                                "id": 2711,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "7200": {
+                "description": "PERSONAL SERVICES",
+                "id": 2712,
+                "children": {}
+            },
+            "7300": {
+                "description": "BUSINESS SERVICES",
+                "id": 2713,
+                "children": {
+                    "7310": {
+                        "description": "Advertising",
+                        "id": 2714,
+                        "children": {
+                            "7311": {
+                                "description": "Advertising Agencies",
+                                "id": 2715,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7320": {
+                        "description": "Credit Reporting & Collection",
+                        "id": 2716,
+                        "children": {}
+                    },
+                    "7330": {
+                        "description": "Mailing, Reproductive, Stenographic",
+                        "id": 2717,
+                        "children": {
+                            "7331": {
+                                "description": "Direct Mail Advertising Services",
+                                "id": 2718,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7340": {
+                        "description": "Services to Buildings",
+                        "id": 2719,
+                        "children": {}
+                    },
+                    "7350": {
+                        "description": "Misc. Equipment Rental & Leasing",
+                        "id": 2720,
+                        "children": {
+                            "7359": {
+                                "description": "Misc. Equipment Rental & Leasing, nec",
+                                "id": 2721,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7360": {
+                        "description": "Personnel Supply Services",
+                        "id": 2722,
+                        "children": {
+                            "7361": {
+                                "description": "Employment Agencies",
+                                "id": 2723,
+                                "children": {}
+                            },
+                            "7363": {
+                                "description": "Help Supply Services",
+                                "id": 2724,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7370": {
+                        "description": "Computer & Data Processing Services",
+                        "id": 2725,
+                        "children": {
+                            "7371": {
+                                "description": "Computer Programming Services",
+                                "id": 2726,
+                                "children": {}
+                            },
+                            "7372": {
+                                "description": "Prepackaged Software",
+                                "id": 2727,
+                                "children": {}
+                            },
+                            "7373": {
+                                "description": "Computer Integrated Systems Design",
+                                "id": 2728,
+                                "children": {}
+                            },
+                            "7374": {
+                                "description": "Data Processing & Preparation",
+                                "id": 2729,
+                                "children": {}
+                            },
+                            "7377": {
+                                "description": "Computer Rental & Leasing",
+                                "id": 2730,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7380": {
+                        "description": "Miscellaneous Business Services",
+                        "id": 2731,
+                        "children": {
+                            "7381": {
+                                "description": "Detective & Armored Car Services",
+                                "id": 2732,
+                                "children": {}
+                            },
+                            "7384": {
+                                "description": "Photo Finishing Laboratories",
+                                "id": 2733,
+                                "children": {}
+                            },
+                            "7385": {
+                                "description": "Telephone Interconnect Systems",
+                                "id": 4329,
+                                "children": {}
+                            },
+                            "7389": {
+                                "description": "Trade Shows & Fairs",
+                                "id": 2734,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "7500": {
+                "description": "AUTO REPAIR, SERVICES & PARKING",
+                "id": 2735,
+                "children": {
+                    "7510": {
+                        "description": "Automotive Rentals, No Drivers",
+                        "id": 2736,
+                        "children": {}
+                    }
+                }
+            },
+            "7600": {
+                "description": "MISCELLANEOUS REPAIR SERVICES",
+                "id": 2737,
+                "children": {}
+            },
+            "7800": {
+                "description": "MOTION PICTURES",
+                "id": 2738,
+                "children": {
+                    "7810": {
+                        "description": "Motion Picture Production & Services",
+                        "id": 2739,
+                        "children": {
+                            "7812": {
+                                "description": "Motion Picture & Video Production",
+                                "id": 2740,
+                                "children": {}
+                            },
+                            "7819": {
+                                "description": "Services Allied to Motion Pictures",
+                                "id": 2741,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7820": {
+                        "description": "Motion Picture Distribution & Services",
+                        "id": 2742,
+                        "children": {
+                            "7822": {
+                                "description": "Motion Picture & Tape Distribution",
+                                "id": 2743,
+                                "children": {}
+                            },
+                            "7829": {
+                                "description": "Motion Picture Distribution Services",
+                                "id": 2744,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7830": {
+                        "description": "Motion Picture Theaters",
+                        "id": 2745,
+                        "children": {}
+                    },
+                    "7840": {
+                        "description": "Video Tape Rental",
+                        "id": 2746,
+                        "children": {
+                            "7841": {
+                                "description": "Video Tape Rental",
+                                "id": 2747,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "7900": {
+                "description": "AMUSEMENT & RECREATIONAL SERVICES",
+                "id": 2748,
+                "children": {
+                    "7940": {
+                        "description": "Commercial Sports",
+                        "id": 2749,
+                        "children": {
+                            "7948": {
+                                "description": "Racing, Including Track Operation",
+                                "id": 2750,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "7990": {
+                        "description": "Misc. Amusement & Recreation Services",
+                        "id": 2751,
+                        "children": {
+                            "7997": {
+                                "description": "Membership Sports & Recreation Clubs",
+                                "id": 2752,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "8000": {
+                "description": "HEALTH SERVICE",
+                "id": 2753,
+                "children": {
+                    "8010": {
+                        "description": "Offices & Clinics of Medical Doctors",
+                        "id": 2754,
+                        "children": {
+                            "8011": {
+                                "description": "Offices & Clinics of Medical Doctors",
+                                "id": 2755,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8050": {
+                        "description": "Nursing & Personal Care Facilities",
+                        "id": 2756,
+                        "children": {
+                            "8051": {
+                                "description": "Skilled Nursing Care Facilities",
+                                "id": 2757,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8060": {
+                        "description": "Hospitals",
+                        "id": 2758,
+                        "children": {
+                            "8062": {
+                                "description": "General Medical & Surgical Hospitals",
+                                "id": 2759,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8070": {
+                        "description": "Medical & Dental Laboratories",
+                        "id": 2760,
+                        "children": {
+                            "8071": {
+                                "description": "Medical Laboratories",
+                                "id": 2761,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8080": {
+                        "description": "Home Health Care Services",
+                        "id": 2762,
+                        "children": {
+                            "8082": {
+                                "description": "Home Health Care Services",
+                                "id": 2763,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8090": {
+                        "description": "Health & Allied Services, nec",
+                        "id": 2764,
+                        "children": {
+                            "8093": {
+                                "description": "Specialty Outpatient Clinics, nec",
+                                "id": 2765,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "8100": {
+                "description": "LEGAL SERVICES",
+                "id": 2766,
+                "children": {
+                    "8110": {
+                        "description": "Legal Services",
+                        "id": 2767,
+                        "children": {
+                            "8111": {
+                                "description": "Legal Services",
+                                "id": 2768,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "8200": {
+                "description": "EDUCATIONAL SERVICES",
+                "id": 2769,
+                "children": {}
+            },
+            "8300": {
+                "description": "SOCIAL SERVICES",
+                "id": 2770,
+                "children": {
+                    "8350": {
+                        "description": "Child Day Care Services",
+                        "id": 2771,
+                        "children": {
+                            "8351": {
+                                "description": "Child Day Care Services",
+                                "id": 2772,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "8600": {
+                "description": "MEMBERSHIP ORGANIZATIONS",
+                "id": 2773,
+                "children": {}
+            },
+            "8700": {
+                "description": "ENGINEERING & MANAGEMENT SERVICES",
+                "id": 2774,
+                "children": {
+                    "8710": {
+                        "description": "Engineering & Architectural Services",
+                        "id": 2775,
+                        "children": {
+                            "8711": {
+                                "description": "Engineering Services",
+                                "id": 2776,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8730": {
+                        "description": "Research & Testing Services",
+                        "id": 2777,
+                        "children": {
+                            "8731": {
+                                "description": "Commercial Physical Research",
+                                "id": 2778,
+                                "children": {}
+                            },
+                            "8734": {
+                                "description": "Testing Laboratories",
+                                "id": 2779,
+                                "children": {}
+                            }
+                        }
+                    },
+                    "8740": {
+                        "description": "Management & Public Relations",
+                        "id": 2780,
+                        "children": {
+                            "8741": {
+                                "description": "Management Services",
+                                "id": 2781,
+                                "children": {}
+                            },
+                            "8742": {
+                                "description": "Management Consulting Services",
+                                "id": 2782,
+                                "children": {}
+                            },
+                            "8744": {
+                                "description": "Facilities Support Services",
+                                "id": 2783,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "8900": {
+                "description": "SERVICES, NEC",
+                "id": 2784,
+                "children": {}
+            }
+        }
+    },
+    "90": {
+        "description": "Public Administration",
+        "id": 2797,
+        "children": {
+            "9700": {
+                "description": "NATIONAL SECURITY & INTL. AFFAIRS",
+                "id": 2785,
+                "children": {
+                    "9720": {
+                        "description": "International Affairs",
+                        "id": 2786,
+                        "children": {
+                            "9721": {
+                                "description": "International Affairs",
+                                "id": 2787,
+                                "children": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "99": {
+        "description": "Miscellaneous",
+        "id": 4336,
+        "children": {
+            "8880": {
+                "description": "American Depositary Receipts",
+                "id": 4337,
+                "children": {}
+            },
+            "8888": {
+                "description": "Foreign Governments",
+                "id": 4338,
+                "children": {}
+            },
+            "9995": {
+                "description": "Non-operating Establishments",
+                "id": 4339,
+                "children": {}
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+<!-- <?xml version="1.0" encoding="windows-1252"?> -->
+<rss version="2.0">
+  <channel>
+    <title>Selected XBRL Data</title>
+    <link>/local</link>
+    <atom:link href="/local" rel="self" type="application/rss+xml" xmlns:atom="https://www.w3.org/2005/Atom"/>
+    <description>This is a saved list of selected filings</description>
+    <language>en-us</language>
+    <pubDate>{a}</pubDate>
+    <lastBuildDate>{a}</lastBuildDate>
+  </channel>
+</rss>

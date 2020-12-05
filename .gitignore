@@ -10,5 +10,4 @@ Arelle.egg-info
 .vscode
 req.txt
 .inprogress.py
-ddlScripts/sqlite_filersInfo.pkl
-ddlScripts/sqlite_filersInfo.pkl
+**/*.pkl

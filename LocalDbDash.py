@@ -18,7 +18,7 @@ try:
 except:
     from plugin.arellepy.CntlrPy import CntlrPy
     
-from .rssDB import rssDBConnection
+from .RssDB import rssDBConnection
 
 
 class RssDBDash:

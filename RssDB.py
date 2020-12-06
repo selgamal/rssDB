@@ -19,7 +19,7 @@ from arelle.PythonUtil import flattenSequence
 from arelle.CntlrCmdLine import CntlrCmdLine
 from .Constants import pathToSQL, wait_duration, DBTypes, rssTables, rssCols, RSSFEEDS
 from .CommonFunctions import updateCikTickerMapping, _populateFilersInfo, _doAll,\
-    getFilerInformation, _getMonthlyFeedsLinks, _getFeedInfo, getRssItemInfo
+    getFilerInformation, _getMonthlyFeedsLinks, _getFeedInfo, getRssItemInfo, _startDBReport
 
 try:
     from xbrlDB.SqlDb import SqlDbConnection, XPDBException, pg8000

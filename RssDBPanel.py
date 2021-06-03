@@ -1727,7 +1727,7 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
 
  
     def _saveAs_helper(self):
-        from .RssDB import pathToTemplates
+        from .Constants import pathToTemplates
         cntlr = self.modelXbrl.modelManager.cntlr
         feedF = filedialog.asksaveasfilename(title=_('Save query results to file'), filetypes=[(("XML"), ".xml .XML")])
         if feedF is None:

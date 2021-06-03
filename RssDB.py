@@ -398,7 +398,7 @@ class rssSqlDbConnection(SqlDbConnection):
             if product == 'postgres':
                 self.addToLog(_('Cannot create database on postgres can only create schema, database needs to be created on the server'), messageCode="RssDB.Error", file=database,  level=logging.ERROR)
                 raise Exception('Cannot create database on postgres, can only create schema, database needs to be created on the server')
-        elif not createDB and product == 'sqlite':
+        elif not createDB and product == 'sqlite' and not database == ':memory:':
             if not os.path.exists(database):
                 self.addToLog(_('Database "{}" does not Exist').format(database), messageCode="RssDB.Error",  file=database,  level=logging.ERROR)
                 raise Exception('Database "{}" does not Exist'.format(database))
@@ -581,7 +581,10 @@ class rssSqlDbConnection(SqlDbConnection):
             if self.product == 'postgres':
                 chk = self.execute('SELECT current_database();', fetch=True)[0][0] == db
             elif self.product == 'sqlite':
-                chk = os.path.basename(self.execute('PRAGMA database_list;', fetch=True)[0][2]) == os.path.basename(db)
+                if db == ':memory:':
+                    chk = True
+                else:
+                    chk = os.path.basename(self.execute('PRAGMA database_list;', fetch=True)[0][2]) == os.path.basename(db)
         except Exception as e:
             # print(e)
             pass
@@ -2205,7 +2208,7 @@ class rssMongoDbConnection:
             pickle.dump(filersInfoDict, f)
 
 
-def _makeMongoDBIndustryClassifications(cntlr, relativesFields = ['industry_id', 'industry_code', 'industry_description'] ):
+def _makeMongoDBIndustryClassifications(cntlr, relativesFields = ['industry_id', 'industry_code', 'industry_description', 'depth'] ):
     '''Creates industry collection data based on industry table in semantic model
     
     Every industry classification document include the industry's children, siblings and ancestor
@@ -2223,6 +2226,9 @@ def _makeMongoDBIndustryClassifications(cntlr, relativesFields = ['industry_id',
     colNames = [x[0] for x in xdbCon.cursor.description]
     industry_dicts = [OrderedDict(zip(colNames,x)) for x in industry]
     industry_cp = industry_dicts[0:]
+
+    depth_q = xdbCon.execute('Select industry_classification, max(depth) as depth from industry_structure group by industry_classification', fetch=True, close=False)
+    depth = {x[0]:x[1] for x in depth_q}
 
     _relativesFields = chkToList(relativesFields, str)
 
@@ -2243,6 +2249,14 @@ def _makeMongoDBIndustryClassifications(cntlr, relativesFields = ['industry_id',
                 x for x in industry_dicts if x['industry_id'] == parent][0]
             res['ancestors'].insert(0, OrderedDict((_k, parent_dict[_k]) for _k in _relativesFields))
             parent = parent_dict['parent_id']
+
+        d = depth[res['industry_classification']]
+        path_list = res['ancestors'][0:]
+        path_list.append(OrderedDict((_k,res[_k]) for _k in _relativesFields))
+        diff = depth[res['industry_classification']] - len(path_list)
+        if diff > 0:
+            path_list.extend([None]*diff)
+        res['path'] = path_list
     
     return result
 

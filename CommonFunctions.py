@@ -992,7 +992,7 @@ def storeInToXbrlDB(cntlr, rssItems, params, selectionButton=None):
                     cntlr.addToLog(_('Could not load additional files for filing {}\n{}').format(rssItem.url, str(e)), messageCode='arellePy.Info', level=logging.INFO)
             viewObj(rssItem, stat="Inserting Into DB")
             storeIntoDB(dbCon, modelXbrl, rssItem)
-            viewObj(rssItem, res="Inserted Into DB")
+            viewObj(rssItem, res="Inserted Into DB", stat="Finished")
             modelXbrl.close()
             del modelXbrl
             hasMxVar = False

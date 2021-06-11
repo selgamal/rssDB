@@ -1675,7 +1675,8 @@ class storeInXbrlDBSettings(tkr.Toplevel):
         if self.options.get('storeInXbrlDB', None):
             previousPrams = self.options.get('storeInXbrlDB', '').split(',')
         # (user, password, host, port, database)
-        db = askDatabase(self.cntlr.parent, previousPrams)
+        db = askDatabase(self, previousPrams)
+        self.grab_set()
         if db:
             dbConnectionString = ','.join(db)
             # self.options["storeInXbrlDB"] = dbConnectionString 
@@ -1685,13 +1686,14 @@ class storeInXbrlDBSettings(tkr.Toplevel):
         return
 
     def closeAction(self, save=True):
-        self.options['storeInXbrlDB'] = self.storeInXbrlDBEntry.value
-        self.cntlr.config['rssQueryResultsActions'] = self.options
+        if self.storeInXbrlDBEntry.value:
+            self.options['storeInXbrlDB'] = self.storeInXbrlDBEntry.value
+            self.cntlr.config['rssQueryResultsActions'] = self.options
         if save:
             self.cntlr.saveConfig()
         self.selectionButton.config(state='normal')
         self.destroy()
-        self.cntlr.addToLog(self.options)
+        # self.cntlr.addToLog(self.options)
         return
 
 class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):

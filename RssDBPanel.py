@@ -3,27 +3,31 @@ rssDB is a tool to collect and store SEC XBRL feeds.
 '''
 
 import os, sys, time, json, gettext, re, datetime, threading, traceback, logging, queue
+from collections import defaultdict
 from dateutil import tz
 from datetime import timedelta
 from lxml import html, etree
 from urllib import request
 from arelle import ViewWinRssFeed, ModelDocument, ViewWinProperties, FileSource
+from arelle.FileSource import openFileSource
 from arelle.ViewWinList import ViewList
 from arelle.Locale import format_string
-from arelle.ModelXbrl import ModelXbrl
+from arelle.ModelXbrl import ModelXbrl, load as mXLoad
 from arellepy.HelperFuncs import chkToList
 from arelle.CntlrWinTooltip import ToolTip
-from arelle.UiUtil import checkbox, gridCombobox
+from arelle.UiUtil import checkbox, gridCombobox, label, gridCell
 from arelle.ViewWinTree import ViewTree
-from arellepy.CntlrPy import CntlrPy, runFormulaFromDBonRssItems
+from arellepy.CntlrPy import CntlrPy, runFormulaFromDBonRssItems, makeFormulaDict
+from arellepy.HelperFuncs import getExtractedXbrlInstance
+# from arelle.DialogUserPassword import askDatabase
 try:
     from .RssDB import rssDBConnection 
     from .Constants import DBTypes, pathToResources
-    from .CommonFunctions import _makeRssFeedLikeXml
+    from .CommonFunctions import _makeRssFeedLikeXml, storeInToXbrlDB, _dbTypes, dbProduct
 except:
     from rssDB.RssDB import rssDBConnection 
     from rssDB.Constants import DBTypes, pathToResources
-    from rssDB.CommonFunctions import _makeRssFeedLikeXml
+    from rssDB.CommonFunctions import _makeRssFeedLikeXml, storeInToXbrlDB, _dbTypes, dbProduct
 
 import tkinter as tkr
 from tkinter import messagebox, simpledialog
@@ -81,14 +85,16 @@ DBDescriptions = ("Postgres", "SQLite", "MongoDB")
 
 searchResults = 0
 
+
 def makeWeight(frame, columns=True, rows=True, _weight=1):
-    cols, rows = frame.grid_size()
+    cols, _rows = frame.grid_size()
     if columns:
         for c in range(0, cols):
             frame.columnconfigure(c, weight=_weight)
     if rows:
-        for r in range(0, rows):
+        for r in range(0, _rows):
             frame.rowconfigure(r, weight=_weight)
+    return
 
 def toolBarExtender(cntlr, toolbar): 
     addTosysPath = cntlr.config.setdefault('rssDBaddToSysPath', [])
@@ -137,8 +143,10 @@ def toolBarExtender(cntlr, toolbar):
     image = tkr.PhotoImage(file=image)
     cntlr.toolbar_images.append(image)
     tbControl = ttk.Button(toolbar, image=image, command= lambda: openRssDBPanel(tbControl, cntlr), style="Toolbutton", padding=toolbarButtonPadding)
+    ToolTip(tbControl, _('Launch rssDB panel'))
     column, row = toolbar.grid_size()
     tbControl.grid(row=0, column=column)
+    return
 
 def rssDB_showLoadedXbrl(cntlr, modelXbrl, attach, selectTopView=False, queryParams=None, q=None):
     global searchResults
@@ -184,6 +192,7 @@ def rssDB_showLoadedXbrl(cntlr, modelXbrl, attach, selectTopView=False, queryPar
         tkr.messagebox.showwarning(_("Exception preparing view"),msg, parent=cntlr.parent)
         cntlr.addToLog(msg)
     cntlr.showStatus(_("Ready..."), 2000)
+    return
     
 def rssDB_backgroundLoadXbrl(cntlr, filesource, importToDTS, selectTopView, queryParams=None, q=None):
     '''Based on CntlrWinMain.backgroundLoadXbrl'''
@@ -222,6 +231,7 @@ def rssDB_backgroundLoadXbrl(cntlr, filesource, importToDTS, selectTopView, quer
                                         _("not successfully %s in %.2f secs"), 
                                         (action, time.time() - startedAt)))
             cntlr.showStatus(_("Loading terminated"), 15000)
+    return
 
 class rssDBFrame(tkr.Frame):
     def __init__(self, master, cntlr=None, allInOne=False, **kw):
@@ -253,10 +263,14 @@ class rssDBFrame(tkr.Frame):
 
         self.btn_connectToDb = tkr.Button(self.connectionFrame, text="Connect To RSS DB", command=self.connectToDB,) # width=13
         self.btn_disconnectDB = tkr.Button(self.connectionFrame,text="Disconnect RSS DB", command=lambda: self.disconnectDB(confirm=True),) #width=13
+        ToolTip(self.btn_disconnectDB, _('Disconnet Current Connection'))
         self.btn_disconnectDB.config(state='disabled')
         self.btn_checkDbStat = tkr.Button(self.connectionFrame, text="Get DB Stat", command= lambda: self.backgroundGetDbStats(self.dbConnection),) #width=8
+        ToolTip(self.btn_checkDbStat, _('Display DB stats in Arelle message panel'))
         self.btn_checkDbStat.config(state='disabled')        
         self.btn_showReport = tkr.Button(self.connectionFrame, text="DB Report", command= self.startDash, ) #width=8
+        ToolTip(self.btn_showReport, _('Runs a web app the shows information about the submissions in the database, requires pandas, plotly and other packages '
+                                        'you will be prompted for the path where these packages are installed (probably a python virtual environment)'), wraplength=360)
         self.btn_showReport.config(state='disabled')        
 
         self.btn_connectToDb.grid(row=1, column=0, columnspan=3, sticky=tkr.EW, pady=1, padx=1)
@@ -308,7 +322,6 @@ class rssDBFrame(tkr.Frame):
         makeWeight(self.connectionFrame)
         # self.bind("<Destroy>", self._destroy)
         
-
     def btn_cmd_updateDB(self):
         global con_dependent_ui
         self.btn_updateDB.config(state='disabled')
@@ -356,10 +369,12 @@ class rssDBFrame(tkr.Frame):
             con_dependent_ui.remove(topL)
             self.btn_searchDB.config(state='normal')
             topL.destroy()
+            return
 
         topL.close = closeAction
         topL.protocol("WM_DELETE_WINDOW", closeAction)
         makeWeight(topL)
+        return
 
     def startDash(self):
         dbReport = self.dbConnection.startDBReport()
@@ -370,6 +385,7 @@ class rssDBFrame(tkr.Frame):
         # except Exception as e:
         #     messagebox.showerror(title="RSS DB error", message=traceback.format_exc(), parent=self.cntlr.parent)
         #     self.cntlr.addToLog(traceback.format_exc(), messageCode="RssDB.Error", file="",  level=logging.ERROR)
+        return
 
     def stopAutoUpdate(self):
         if getattr(self, 'backgroundUpdateConn', False):
@@ -382,7 +398,6 @@ class rssDBFrame(tkr.Frame):
             self.cntlr.addToLog(_('No connection is set to auto-update currently'), messageCode="RssDB.Info", file=self.dbConnection.conParams.get('databae', ""), level=logging.INFO)
         
         return
-
 
     def _updateDB(self, cntrl, connParams: dict, doAllParams: dict):
         global getQueue_update
@@ -397,6 +412,7 @@ class rssDBFrame(tkr.Frame):
             self.updateDBFrame.update_btn.config(text=text)
             self.backgroundUpdateConn.doAll(**doAllParams)
         except Exception as e:
+            getQueue_update = False
             tkr.messagebox.showerror(title='RSS DB Error - updateDB', message=str(e) + '\n' + traceback.format_exc())
         self.backgroundUpdateConn.close()
         self.backgroundUpdateConn = None
@@ -419,7 +435,6 @@ class rssDBFrame(tkr.Frame):
                 cntlr.uiThreadQueue.put((callback[callbackName],args))
         return
 
-
     def backGroundUpdateDB(self, doAllArgs: dict = None):
         global getQueue_update
         connArgs = {k:v for k, v in self.dbConnection.conParams.items() if not k == 'cntlr'}
@@ -429,39 +444,8 @@ class rssDBFrame(tkr.Frame):
         # self.t2 = threading.Thread(target=self._backgroundGetQ, daemon=True)
         # self.t2.start()
         self.t1.start()
-    
-    
-    def testSearch(self):
-        try:
-            from .Constants import sp100
-        except:
-            from rssDB.RssDB import sp100
-        if not self.dbConnection:
-            self.cntlr.addToLog(_('No SEC RSS DB Connection'), messageCode="RssDB.Info", file="",  level=logging.INFO)
-            self.cntlr.addToLog('')
-            self.cntlr.logView.listBox.see(tkr.END)
-            return
-        elif not self.dbConnection.checkConnection():
-            self.cntlr.addToLog(_('No SEC RSS DB Connection'), messageCode="RssDB.Info", file="",  level=logging.INFO)
-            self.cntlr.logView.listBox.see(tkr.END)
-            return
-        elif self.dbConnection.checkConnection():
-            qParams = {'tickerSymbol':', '.join(sp100), 'limit': 100}
-            res = self.dbConnection.searchFilings(**qParams, getFiles=True)
-            saveAs = None
-            if self.dbConnection.searchResultsModelXbrl and os.path.isfile(self.dbConnection.searchResultsTempFile):
-                # save results to same temp file
-                saveAs = self.dbConnection.searchResultsTempFile
-            tmpF = _makeRssFeedLikeXml(conn=self.dbConnection, dbFilings_dicts=res['filings'], dbFiles_dicts=res['files'], saveAs=saveAs, showcount=False)[0]
-            self.dbConnection.searchResultsTempFile = tmpF
-            if hasattr(self.cntlr, 'hasGui'):
-                # self.cntlr.fileOpenFile(tmpF)
-                filesource = FileSource.FileSource(tmpF, self.cntlr)
-                threading.Thread(target=rssDB_backgroundLoadXbrl, args=(self.cntlr, filesource,False,False, qParams), daemon=True).start()
-            elif hasattr(self.cntlr, 'runKwargs'):
-                self.cntlr.runKwargs(file=tmpF, keepOpen='')
-                ViewWinRssFeed.viewRssFeed(self.cntlr.modelManager.modelXbrl, self.tabWin)
-
+        return
+  
     def backgroundSearchDB(self, params:dict):
         conn = self.dbConnection
         if not conn or not getattr(conn, 'conParams', False):
@@ -494,11 +478,12 @@ class rssDBFrame(tkr.Frame):
                 ViewWinRssFeed.viewRssFeed(self.cntlr.modelManager.modelXbrl, self.tabWin)
         if hasattr(self, 'queryFrame'):
             self.queryFrame.searchDB_btn.config(state='normal')
+        return
 
     def _destroy(self, event=None):
         self.disconnectDB(destroy=1)
         self.destroy()
-
+        return
 
     def addPriorDatabaseSettings(self, dbSettings: tuple):
         '''Cache up to 6 entries for database settings'''
@@ -513,7 +498,7 @@ class rssDBFrame(tkr.Frame):
         if len(self.priorDatabaseSettingsList) > 6:
             del self.priorDatabaseSettingsList[0]
         self.cntlr.saveConfig()
-
+        return
 
     def disconnectDB(self, destroy=0, confirm=True):
         global con_dependent_ui
@@ -595,8 +580,7 @@ class rssDBFrame(tkr.Frame):
                 tkr.messagebox.showerror(title='RSS DB Error - getDBStats', message=traceback.format_exc(), parent=self.cntlr.parent)
         else:
             tkr.messagebox.showerror(title='RSS DB Error - getDBStats', message=_('No DB Connection'))
-            return
-
+        return
 
     def connectToDB(self):
         priorSettings = self.priorDatabaseSettingsList[-1] if len(self.priorDatabaseSettingsList) else None
@@ -609,7 +593,7 @@ class rssDBFrame(tkr.Frame):
             self.cntlr.logView.listBox.see(tkr.END)
         except:
             pass
-
+        return
 
     def askDatabase(self, parent, priorDatabaseSettings):
         res = False
@@ -626,17 +610,15 @@ class rssDBFrame(tkr.Frame):
             res = True
         return res
 
-
     def showSelections(self):
         global industryCodesSelection
         py = sys.executable
         self.cntlr.addToLog(sys.argv)
-        print(industryCodesSelection)
-        print(self.winfo_height(), self.winfo_width())
-        print(self.winfo_screenmmwidth())
+        return
  
     def openIndustrySelector(self):
         selector = industrySelector(self, self.btn_industrySelect)
+        return
 
 class DialogRssDBConnect(tkr.Toplevel):
     """Based on arelle/DialogUserPassword"""
@@ -807,7 +789,6 @@ class DialogRssDBConnect(tkr.Toplevel):
         window = self.winfo_toplevel()
         # window.columnconfigure(0, weight=1)
         self.geometry("+{0}+{1}".format(dialogX+50,dialogY+100))
-        print(frame.grid_size())
         makeWeight(self)
         makeWeight(frame)
         frame.columnconfigure(4, weight=0)
@@ -823,9 +804,10 @@ class DialogRssDBConnect(tkr.Toplevel):
         self.wait_window(self)
 
     def showWid(self):
-        print(self.__namedWidgets)
-        print([x._name for x in self.__namedWidgets])
-
+        # testing
+        # print(self.__namedWidgets)
+        # print([x._name for x in self.__namedWidgets])
+        pass
 
     def openSqliteFile(self):
         fileName = filedialog.askopenfilename(parent=self,
@@ -836,7 +818,7 @@ class DialogRssDBConnect(tkr.Toplevel):
             dbEntry =  [x for x in self.__namedWidgets if x._name == 'databaseEntry'][0]
             dbEntry.delete(0, tkr.END)
             dbEntry.insert(0, fileName)
-        
+        return
 
     def dbTypeModified(self, clear=True, i=None, v=None, o=None):
         widgets = {'dbTypeLabel':{'postgres': 'normal', 'sqlite': 'normal', 'mongodb':'normal'}, 
@@ -878,6 +860,7 @@ class DialogRssDBConnect(tkr.Toplevel):
                     w.valueVar.set(0)
                     w.var = False
             w.config(state=widgets[wid_name][db_Selection])
+        return
 
     def checkEntries(self):
         errors = []
@@ -927,6 +910,7 @@ class DialogRssDBConnect(tkr.Toplevel):
             elif w._name == 'timeoutEntry':
                 w.delete(0, 'end')
                 w.insert(0, timeout)
+        return
 
     def clearCachedConns(self, currentOnly = True):
         # global priorSettingsFile
@@ -940,10 +924,10 @@ class DialogRssDBConnect(tkr.Toplevel):
                 self.parent.priorDatabaseSettingsList = []
                 self.parent.cntlr.config['rssDBconnection'] = []
                 self.parent.cntlr.saveConfig()
-                
+           
         self.setDialogueEntries()
-            
-
+        return
+ 
     def browseDbSettings(self, direction):
         if not direction: # clears current form
             self.setDialogueEntries()
@@ -965,11 +949,12 @@ class DialogRssDBConnect(tkr.Toplevel):
         elif nextIndex < 0:
             selectedIndex = settingLastIndex # recycle 
 
-        print(selectedIndex)
+        # print(selectedIndex)
         
         self.setDialogueEntries(self.parent.priorDatabaseSettingsList[selectedIndex])
         self.parent.currentSettingSelectionIndex = selectedIndex
-    
+
+        return
    
     def ok(self, event=None):
         if hasattr(self, "useOsProxyCb"):
@@ -994,7 +979,9 @@ class DialogRssDBConnect(tkr.Toplevel):
         
         if self.accepted:
             self.close()
-    
+
+        return
+
     def backgroundCreateDB(self, conn, product):
         try:
             if product == 'sqlite':
@@ -1011,7 +998,7 @@ class DialogRssDBConnect(tkr.Toplevel):
             self.parent.backgroundGetDbStats(conn)
         except Exception as e:
             tkr.messagebox.showerror(title='RSS DB Error - createDB', message=traceback.format_exc())
-
+        return
 
     def getDbConnection(self):
         dbParamsInput = (self.urlAddr, self.urlPort, self.user, self.password, self.database, self.schema, 
@@ -1067,15 +1054,19 @@ class DialogRssDBConnect(tkr.Toplevel):
             if dbConnection:
                 dbConnection.close()
             tkr.messagebox.showerror(_('RSS DB Error'), str(e))
-                
+        return
+
     def close(self, event=None):
         self.parent.focus_set()
         self.destroy()
+        return
 
 class runFormulaDialog(tkr.Toplevel):
-    def __init__(self, searchResView, cntlr, master, selectionButton: tkr.Button, **kw):
+    def __init__(self, searchResView, cntlr, master, selectionButton: tkr.Button, includeRun=False, **kw):
         global con_dependent_ui
         super().__init__(master, **kw)
+        self.isSaved = False
+        self.parent = master
         self.cntlr = cntlr
         self.con = cntlr.dbConnection
         self.searchResView = searchResView
@@ -1103,6 +1094,9 @@ class runFormulaDialog(tkr.Toplevel):
 
         self.runFormulaFileFolderVar = tkr.StringVar()
         self.runFormulaFileFolderVar.set('')
+
+        self.additionalImportVar = tkr.StringVar()
+        self.additionalImportVar.set('')
 
         # Settings
         self.selectionButton = selectionButton
@@ -1174,6 +1168,17 @@ class runFormulaDialog(tkr.Toplevel):
         self.selectedFormula_entry.grid(row=0, column=1, sticky=tkr.EW, pady=3, padx=3)
         ToolTip(self.selectedFormula_entry, text=_("Selected Formula from the list above to run with selected search results"), wraplength=360)
 
+        additionalImportsLabel = tkr.Label(self.frame_opts_run_db, text=_("Import:"), underline=0, name='additionalImports')
+        additionalImportsLabel.grid(row=1, column=0, sticky=tkr.W, pady=3, padx=1)
+        self.additionalImportEntry = tkr.Entry(self.frame_opts_run_db, textvariable=self.additionalImportVar, width=30, name='additionalImportsEntry')
+        self.additionalImportEntry.grid(row=1, column=1, columnspan=3, sticky=tkr.EW, pady=3, padx=1)
+        ToolTip(self.additionalImportEntry, text=_("Additional files to import (schemas, custom function implementations...)"), wraplength=360)
+        self.btn_formula_imports = tkr.Button(self.frame_opts_run_db, image=self.image_f,
+                                                    command= self.btn_cmd_formula_imports, 
+                                                    name='btn_formula_imports')
+        self.btn_formula_imports.grid(row=1, column=4, sticky=tkr.EW, pady=3, padx=1)
+
+
         self.insertResultsIntoDB_cb = checkbox(self.frame_opts_run_db, 2, 0, columnspan=1, text=_("Insert Results"))
         self.insertResultsIntoDB_cb.name ='insertResultsIntoDB_cb'
         self.insertResultsIntoDB_cb.valueVar.set(0)
@@ -1194,17 +1199,19 @@ class runFormulaDialog(tkr.Toplevel):
                                                     "path to a folder MUST be selected below, this can be selected along with insert into db option"), wraplength=360)
 
         saveFolderLabel = tkr.Label(self.frame_opts_run_db, text=_("Save To Folder:"), underline=0, name='saveFolderLabel')
-        saveFolderLabel.grid(row=1, column=0, sticky=tkr.W, pady=3, padx=1)
+        saveFolderLabel.grid(row=2, column=0, sticky=tkr.W, pady=3, padx=1)
         self.saveFolderEntry = tkr.Entry(self.frame_opts_run_db, textvariable=self.saveFolderVar, width=30, name='saveFolderEntry')
-        self.saveFolderEntry.grid(row=1, column=1, columnspan=3, sticky=tkr.EW, pady=3, padx=1)
+        self.saveFolderEntry.grid(row=2, column=1, columnspan=3, sticky=tkr.EW, pady=3, padx=1)
         ToolTip(self.saveFolderEntry, text=_("Enter Folder path to save formula output files"), wraplength=360)
         self.btn_formula_run_folder = tkr.Button(self.frame_opts_run_db, image=self.image_f,
                                                     command= lambda: self.runFormulaOpenFolderGUI(self.saveFolderEntry, _("Select folder to save formula output")), 
                                                     name='btn_formula_run_folder')
-        self.btn_formula_run_folder.grid(row=1, column=4, sticky=tkr.EW, pady=3, padx=1)
+        self.btn_formula_run_folder.grid(row=2, column=4, sticky=tkr.EW, pady=3, padx=1)
 
-        self.btn_run_db = tkr.Button(self.frame_opts_run_db, text='RUN',command=self.runFormulaFromDb, name='btn_run_db')
-        self.btn_run_db.grid(row=0, column=5, rowspan=2, sticky=tkr.NSEW, pady=3, padx=1)
+        
+        self.btn_run_db = tkr.Button(self.frame_opts_run_db, text='RUN' if includeRun else 'SAVE', \
+                                        command=self.runFormulaFromDb if includeRun else self.btn_cmd_OK , name='btn_run_db')
+        self.btn_run_db.grid(row=0, column=5, rowspan=3, sticky=tkr.NSEW, pady=3, padx=1)
 
         # # Run formula from file options frame
         # self.frame_opts_run_file = tkr.LabelFrame(self.frame_opts, text=_("Run Formula from File (Can not insert result to db)"))
@@ -1276,13 +1283,25 @@ class runFormulaDialog(tkr.Toplevel):
         self.view()
 
         con_dependent_ui.append(self)
+        if not includeRun:
+            self.wait_window(self)
 
+    # def runFormulaFileGUI(self):
+    #     fileName = self.runFormulaFileVar.get()
+    #     folderPath = self.runFormulaFileFolderVar.get()
+    def btn_cmd_formula_imports(self):
+        _imports = filedialog.askopenfilenames(title=_('Select additional files to import'), parent=self, filetypes=[(("XML"), ".xml .XML .xsd .XSD")])
+        additionalImports = '|'.join(_imports)
+        if additionalImports:
+            self.additionalImportVar.set(additionalImports)
+        return
 
-    def runFormulaFileGUI(self):
-        fileName = self.runFormulaFileVar.get()
-        folderPath = self.runFormulaFileFolderVar.get()
-
-    
+    def btn_cmd_OK(self):
+        self.isSaved = True
+        self.parent.focus()
+        self.close()
+        return
+   
     def background_runFormula(self, _key):
         global MAKEDOTS_RSSDBPANEL
         # disable another run
@@ -1298,6 +1317,7 @@ class runFormulaDialog(tkr.Toplevel):
         updateExisting = self.updateExistingResults_cb.value
         saveToFolder = self.saveResultsToFolder_cb.value
         folderPath = self.saveFolderVar.get()
+        additionalImports = self.additionalImportVar.get()
         
         con = self.con
         closeCon = False
@@ -1316,7 +1336,7 @@ class runFormulaDialog(tkr.Toplevel):
         sortedItems = sorted(pubDateRssItems, key=lambda x:x[0], reverse=True)
         sortedRssItems = [x[1] for x in sortedItems]
         try:
-            res = runFormulaFromDBonRssItems(conn=con, rssItems=sortedRssItems, formulaId=formulaId, 
+            res = runFormulaFromDBonRssItems(conn=con, rssItems=sortedRssItems, formulaId=formulaId, additionalImports=additionalImports,
                                                 insertResultIntoDb=insertRes, updateExistingResults=updateExisting,
                                                 saveResultsToFolder=saveToFolder, folderPath=folderPath, returnResults=False)
 
@@ -1333,7 +1353,6 @@ class runFormulaDialog(tkr.Toplevel):
             con.close()  
 
         return
-
     
     def runFormulaFromDb(self):
         global MAKEDOTS_RSSDBPANEL
@@ -1343,23 +1362,27 @@ class runFormulaDialog(tkr.Toplevel):
         t2 = threading.Thread(target=dotted, args=(self.cntlr, _key, 'Running formula'), daemon=True)
         t2.start()
         t.start()
+        return
     
     def runFormulaOpenFileGUI(self, entry, title, types):
         fileName = filedialog.askopenfilename(title=title, parent=self, filetypes=types)
         if fileName:
             entry.delete(0, tkr.END)
             entry.insert(0, fileName)
+        return
 
     def runFormulaOpenFolderGUI(self, entry, title):
         dirName = filedialog.askdirectory(title=title, parent=self)
         if dirName:
             entry.delete(0, tkr.END)
             entry.insert(0, dirName)
+        return
 
     def setSelection(self, s):
         focused = self.tree.treeView.focus()
         self.selectedFormula.set(focused)
         self.selectedFormula_entry.config(text=self.selectedFormula.get())
+        return
 
     def formulaSelectionModified(self):
         toRemove = self.removeFormulaEntry.get().split(', ') if self.removeFormulaEntry.get() else []
@@ -1370,6 +1393,7 @@ class runFormulaDialog(tkr.Toplevel):
                 toRemove.append(toInclude)
             self.removeFormulaEntry.delete(0, tkr.END)
             self.removeFormulaEntry.insert(0, ', '.join(toRemove))
+        return
 
     def removeFormulaModified(self):
         toRemove = self.removeFormulaVar.get()
@@ -1377,13 +1401,14 @@ class runFormulaDialog(tkr.Toplevel):
             self.btn_formula_remove_actions.config(state='normal')
         else:
             self.btn_formula_remove_actions.config(state='disabled')
-    
+        return
+
     def addFormulaFileModified(self, clear=True):
         if not self.addFormulaFileVar.get():
             self.btn_formula_add_actions.config(state='disabled')
         else:
             self.btn_formula_add_actions.config(state='normal')
-
+        return
 
     def addFormulaGUI(self):
         if self.con.checkConnection():
@@ -1398,6 +1423,7 @@ class runFormulaDialog(tkr.Toplevel):
                 self.view()
         else:
             messagebox.showinfo(_("RSS DB Info"), _("There is no active connection to DB"), icon='warning')
+        return
 
     def removeFormulaGUI(self):
         if self.con.checkConnection():
@@ -1411,6 +1437,7 @@ class runFormulaDialog(tkr.Toplevel):
                     self.view()
         else:
             messagebox.showinfo(_("RSS DB Info"), _("There is no active connection to DB"), icon='warning')
+        return
         
     def makeCols(self):
         self.tree.treeView["columns"] = ("description", 'dateTimeAdded', 'fileName')
@@ -1422,6 +1449,7 @@ class runFormulaDialog(tkr.Toplevel):
         self.tree.treeView.heading("dateTimeAdded", text="Date Added", anchor="w")
         self.tree.treeView.column("fileName", width=100, anchor="w")
         self.tree.treeView.heading("fileName", text="File Name", anchor="w")
+        return
 
     def view(self): # reload view
         self.selectedFormula.set(0)
@@ -1433,6 +1461,7 @@ class runFormulaDialog(tkr.Toplevel):
             self.viewFormulae(dbFormulae)
         else:
             messagebox.showinfo(_("RSS DB Info"), _("There is no active connection to DB"), icon='warning')
+        return
 
     def close(self):
         global con_dependent_ui
@@ -1445,8 +1474,8 @@ class runFormulaDialog(tkr.Toplevel):
         con_dependent_ui.remove(self)
         self.destroy()
         self.selectionButton.config(state='normal')
+        return
         
-
     def viewFormulae(self, formulaeDicts):
         self.id = 1
         for f in formulaeDicts:
@@ -1459,6 +1488,7 @@ class runFormulaDialog(tkr.Toplevel):
             self.id += 1
         else:
             pass
+        return
 
 class industrySelector(tkr.Toplevel):
     def __init__(self, master, selectionButton: tkr.Button, res=res, **kw):
@@ -1513,11 +1543,13 @@ class industrySelector(tkr.Toplevel):
     def closeAction(self):
         self.destroy()
         self.selectionButton.config(state='normal')
+        return
 
     def select_children(self, parent, method):
         method(parent)
         for child in self.tree.get_children(parent):
             self.select_children(child, method)
+        return
                 
 
     def select(self, event=None):
@@ -1526,33 +1558,39 @@ class industrySelector(tkr.Toplevel):
         else:
             method = self.tree.selection_remove if self.tree.focus() in self.tree.selection() else self.tree.selection_add
             self.select_children(self.tree.focus(), method)
-
+        return
 
     def setSkipSelection(self, event=None):
         self.skipSelection = True
+        return
 
     def addNode(self, k,v, parent=""):
         for i, j in v.items():
             self.tree.insert(parent, 'end', iid=i, text=str(i) + ' ' + j['description'])
             if j.get('children', None):
                 self.addNode(i, j['children'], i)
+        return
 
     def setTreeItemOpen(self, node, open=True):
         if node:
             self.tree.item(node, open=open)
         for childNode in self.tree.get_children(node):
             self.setTreeItemOpen(childNode, open)
+        return
 
     def btn_expandAll(self):
         self.setTreeItemOpen("",open=True)
+        return
 
     def btn_collapseAll(self):
         self.setTreeItemOpen("",open=False)
+        return
 
     def btn_cmd_selectAll(self):
         roots = self.tree.get_children()
         for item in roots:
             self.select_children(item, self.tree.selection_add)
+        return
 
     def btn_cmd_deselectAll(self):
         global industryCodesSelection
@@ -1560,12 +1598,98 @@ class industrySelector(tkr.Toplevel):
         for item in roots:
             self.select_children(item, self.tree.selection_remove)
         industryCodesSelection = self.tree.selection()
+        return
 
     def btn_cmd_OK(self):
         global industryCodesSelection
         if self.tree.selection():
             industryCodesSelection = self.tree.selection()
         self.closeAction()
+        return
+
+class storeInXbrlDBSettings(tkr.Toplevel):
+    def __init__(self, searchView, cntlr, master, selectionButton: tkr.Button, selectedItems, **kw):
+        super().__init__(master, **kw)
+        self.searchView = searchView
+        self.modelXbrl = searchView.modelXbrl
+        self.options = cntlr.config.get("rssQueryResultsActions", {})
+        self.cntlr = cntlr
+        self.selectionIds = selectedItems
+        self.selectedRssItems = [self.modelXbrl.modelObject(x) for x in selectedItems]
+        self.selectionButton = selectionButton
+        self.selectionButton.config(state='disabled')
+        self.wm_title(_('Store In Xbrl DB'))
+        self.protocol('WM_DELETE_WINDOW', self.closeAction)
+
+        #vars
+        self.runFormulaeOptions = dict()
+        
+        y = 0
+        selectionNote = tkr.Label(self, text='{} rss items selected'.format(len(selectedItems)), name='selectionNote',width=8, anchor='w')
+        selectionNote.grid(row=y, column=0, sticky=tkr.EW, pady=0, padx=3)
+
+        y+=1        
+        storeInXbrlDBFrame = tkr.LabelFrame(self, text='Store in XBRL DB')
+        storeInXbrlDBFrame.grid(row=y, column=0, sticky=tkr.EW, pady=0, padx=3) 
+
+        label(storeInXbrlDBFrame, 1, 0, text=_("DB Connection:"))
+        self.storeInXbrlDBEntry = gridCell(storeInXbrlDBFrame, 2 , 0, value=self.options.get('storeInXbrlDBparams',''))
+        self.storeInXbrlDBEntry.grid(pady=3, padx=3)
+        ToolTip(self.storeInXbrlDBEntry, text=_("Enter an XBRL Database (Postgres) connection string.  "
+                                           "E.g., host,port,user,password,db[,timeout].  "), wraplength=240)
+        self.xbrlDBImage = tkr.PhotoImage(file=os.path.join(self.cntlr.imagesDir, "toolbarOpenDatabase.gif"))
+        self.btn_storeInXbrlDBparams = tkr.Button(storeInXbrlDBFrame, image=self.xbrlDBImage, command=self.btn_cmd_storeInXbrlDBparams)
+        self.btn_storeInXbrlDBparams.grid(row=0, column=3, sticky=tkr.EW)
+
+        self.btn_store_action = tkr.Button(storeInXbrlDBFrame, text = _('Store In XBRL DB'), command=self.btn_cmd_store_action)
+        self.btn_store_action.grid(row=1, column=0, columnspan=4, sticky=tkr.EW)
+
+        makeWeight(storeInXbrlDBFrame,rows=False)
+
+    def btn_cmd_store_action(self):
+        if self.storeInXbrlDBEntry.value:
+            items = sorted(self.selectedRssItems, key=lambda x:x.pubDate, reverse=True)
+            try: # let make sure we have a connection to the db before we get excited
+                _dbCon = [x.strip() if x.strip() else None for x in self.storeInXbrlDBEntry.value.split(',')]
+                conFunc = _dbTypes.get(_dbCon[6], None)
+                _conn = conFunc(self.modelXbrl, _dbCon[2], _dbCon[3],_dbCon[0], _dbCon[1], _dbCon[4], _dbCon[5], dbProduct.get(_dbCon[6], None))
+                _conn.close()
+            except Exception as e:
+                self.cntlr.addToLog(_('Could not connect to db\n{}').format(str(e)), messageCode='rssDB.Error', level=logging.ERROR)
+                return
+            t1 = threading.Thread(target=storeInToXbrlDB, args=(self.cntlr, items, self.storeInXbrlDBEntry.value, self.selectionButton), daemon=True)
+            t1.start()
+        else:
+            messagebox.showerror(_("RSS DB Error"), _("No Connection paramaters given"), parent=self.cntlr.parent)
+            return
+        self.closeAction()
+        return
+
+    def btn_cmd_storeInXbrlDBparams(self):
+        # from xbrlDB/DialogRssWatchExtender.py
+        from arelle.DialogUserPassword import askDatabase
+        previousPrams = None
+        if self.options.get('storeInXbrlDB', None):
+            previousPrams = self.options.get('storeInXbrlDB', '').split(',')
+        # (user, password, host, port, database)
+        db = askDatabase(self.cntlr.parent, previousPrams)
+        if db:
+            dbConnectionString = ','.join(db)
+            # self.options["storeInXbrlDB"] = dbConnectionString 
+            self.storeInXbrlDBEntry.setValue(dbConnectionString)
+        else:  # deleted
+            self.options.pop("storeInXbrlDB", "")  # remove entry
+        return
+
+    def closeAction(self, save=True):
+        self.options['storeInXbrlDB'] = self.storeInXbrlDBEntry.value
+        self.cntlr.config['rssQueryResultsActions'] = self.options
+        if save:
+            self.cntlr.saveConfig()
+        self.selectionButton.config(state='normal')
+        self.destroy()
+        self.cntlr.addToLog(self.options)
+        return
 
 class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
     '''based on arelle.ViewWinRssFeed.ViewRssFeed'''
@@ -1580,50 +1704,72 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
         self.conKey = {k:v for k,v in con.conParams.items()}
         self.selectedRssItems = None
         self.treeView.config(selectmode="none")
-        self.frame_Btns = tkr.LabelFrame(self.viewFrame, text=_("Query Results Options"))
+        # self.treeView.grid(sticky=tkr.EW)
+        optionsFrame = tkr.Frame(self.viewFrame)
+        optionsFrame.grid(row=2, column=0, sticky=tkr.NSEW)
+        self.frame_Btns = tkr.LabelFrame(optionsFrame, text=_("Selection and Save Options"))
         self.btn_selectAll = tkr.Button(self.frame_Btns, text="Select All", command=self.btn_cmd_selectAll)
+        self.btn_selectAll.grid(row=0, column=0, padx=3, pady=3, sticky=tkr.NSEW)
         self.btn_deslectAll = tkr.Button(self.frame_Btns, text="Deselect All", command=self.btn_cmd_deselectAll)
-        self.btn_removeSelected = tkr.Button(self.frame_Btns, text="Remove Selected", command=self.btn_cmd_removeSelected)
-        ToolTip(self.btn_removeSelected, text=_("Remove selected items from result"), wraplength=360)
-        self.btn_keepSelected = tkr.Button(self.frame_Btns, text="Keep Selected", command=self.btn_cmd_keepSelected)
-        ToolTip(self.btn_keepSelected, text=_("Keeps selected items and removes all other items from result"), wraplength=360)
-        self.btn_renderEdgarReports = tkr.Button(self.frame_Btns, text="Render Edgar Reports", command=self.renderEdgarReports)
-        ToolTip(self.btn_renderEdgarReports, text=_("Renders Edgar reports for the selected items and opens viewer, a folder needs to be selected to store rendered reports"), wraplength=360)
-        self.btn_formula = tkr.Button(self.frame_Btns, text="Run Formula Options", command=self.btn_cmd_formula)
-        ToolTip(self.btn_formula, text=_("Opens rssDB formulae options to run on selected items - this is different from arelle 'formulae options'"), wraplength=360)
+        self.btn_deslectAll.grid(row=0, column=1, padx=3, pady=3, sticky=tkr.NSEW)
         self.btn_refresh = tkr.Button(self.frame_Btns, text="Refresh", command=self.btn_cmd_refresh)
         ToolTip(self.btn_refresh, text=_("Refreshes query result, useful after updating db"), wraplength=360)
+        self.btn_refresh.grid(row=0, column=2, padx=3, pady=3, sticky=tkr.NSEW)
+        self.btn_removeSelected = tkr.Button(self.frame_Btns, text="Remove Selected", command=self.btn_cmd_removeSelected)
+        ToolTip(self.btn_removeSelected, text=_("Remove selected items from result"), wraplength=360)
+        self.btn_removeSelected.grid(row=1, column=0, padx=3, pady=3, sticky=tkr.NSEW)
+        self.btn_keepSelected = tkr.Button(self.frame_Btns, text="Keep Selected", command=self.btn_cmd_keepSelected)
+        ToolTip(self.btn_keepSelected, text=_("Keeps selected items and removes all other items from result"), wraplength=360)
+        self.btn_keepSelected.grid(row=1, column=1, padx=3, pady=3, sticky=tkr.NSEW)
         self.btn_saveResult = tkr.Button(self.frame_Btns, text="Save As", command=self.btn_cmd_saveAs)
         ToolTip(self.btn_saveResult, text=_("Saves the result as an xml rss feed document that can be parsed by arelle as rss feed"), wraplength=360)
-        self.btn_selectAll.grid(row=0, column=0, padx=3, pady=3)
-        self.btn_deslectAll.grid(row=0, column=1, padx=3, pady=3)
-        self.btn_removeSelected.grid(row=0, column=2, padx=3, pady=3)
-        self.btn_keepSelected.grid(row=0, column=3, padx=3, pady=3)
-        self.btn_renderEdgarReports.grid(row=0, column=4, padx=3, pady=3)
-        self.btn_formula.grid(row=0, column=5, padx=3, pady=3)
-        self.btn_refresh.grid(row=0, column=6, padx=3, pady=3)
-        self.btn_saveResult.grid(row=0, column=7, padx=3, pady=3)
-        self.frame_Btns.grid(row=2, column=0, sticky=tkr.EW, padx=3, pady=3)
-        # makeWeight(self.frame_Btns)
+        self.btn_saveResult.grid(row=1, column=2, padx=3, pady=3, sticky=tkr.NSEW)
+        
+        self.frame_actions = tkr.LabelFrame(optionsFrame, text=_("Do actions on selection"))
+        self.btn_renderEdgarReports = tkr.Button(self.frame_actions, text="Render Edgar Reports", command=self.renderEdgarReports)
+        ToolTip(self.btn_renderEdgarReports, text=_("Renders Edgar reports for the selected items and opens viewer, a folder needs to be selected to store rendered reports"), wraplength=360)
+        self.btn_renderEdgarReports.grid(row=0, column=0, rowspan=2, padx=3, pady=3, sticky=tkr.NSEW) 
+        self.btn_formula = tkr.Button(self.frame_actions, text="Run XBRL Formula", command=self.btn_cmd_formula)
+        ToolTip(self.btn_formula, text=_("Opens rssDB formulae options to run on selected items - this is different from arelle 'formulae options'"), wraplength=360)        
+        self.btn_formula.grid(row=0, column=1, rowspan=2, padx=3, pady=3, sticky=tkr.NSEW)
+        self.btn_storeInXbrlDB = tkr.Button(self.frame_actions, text="Store In XBRL DB", command=self.btn_cmd_storeInXBRLDB)
+        ToolTip(self.btn_storeInXbrlDB, text=_("Store selected filings into XBRL db"), wraplength=360)
+        self.btn_storeInXbrlDB.grid(row=0, column=2, rowspan=2, padx=3, pady=3, sticky=tkr.NSEW)
+
+        self.frame_Btns.grid(row=0, column=0, sticky=tkr.NSEW, padx=3, pady=3)
+        self.frame_actions.grid(row=0, column=1, sticky=tkr.NSEW, padx=3, pady=3)
+        makeWeight(optionsFrame)
+        makeWeight(self.frame_Btns)
+        makeWeight(self.frame_actions)
 
     def close(self):
         del self.viewFrame.view
         if self.modelXbrl:
             self.tabWin.forget(self.viewFrame)
             self.modelXbrl.views.remove(self)
-            self.modelXbrl = None
+            self.modelXbrl.modelManager.close()
+            del self.modelXbrl
             self.view = None
         con_dependent_ui.remove(self)
+        return
+
+    def btn_cmd_storeInXBRLDB(self):
+        if len(self.treeView.selection()):
+            storeInXbrlDBSettings(self, self.modelXbrl.modelManager.cntlr, self.modelXbrl.modelManager.cntlr.parent, self.btn_storeInXbrlDB, self.treeView.selection())
+        else:
+            messagebox.showerror(_("RSS DB Info"), _("There are no Rss Items selected"), parent=self.modelXbrl.modelManager.cntlr.parent)
+            return
+        return
 
     def btn_cmd_formula(self):
         # make sure we are using same connection that produced the search result
         if self.conKey == getattr(self.modelXbrl.modelManager.cntlr.dbConnection, 'conParams', None):
-            formulaDialog = runFormulaDialog(self, self.modelXbrl.modelManager.cntlr, self.modelXbrl.modelManager.cntlr.parent, self.btn_formula)
+            formulaDialog = runFormulaDialog(self, self.modelXbrl.modelManager.cntlr, self.modelXbrl.modelManager.cntlr.parent, self.btn_formula,includeRun=True)
         else:
             messagebox.showerror(_("RSS DB Error"), _("There is no active DB connection or current connection is different "
                                                         "from the connection that produced the search results"), parent=self.modelXbrl.modelManager.cntlr.parent)
             return
-
+        return
 
     def rssDBtreeviewSelect(self, *args):
         if self.blockSelectEvent == 0 and self.blockViewModelObject == 0:
@@ -1633,10 +1779,12 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
             method(currSelection)
             self.modelXbrl.viewModelObject(currSelection)
             self.blockViewModelObject -= 1
+        return
 
     def viewRssFeed(self, modelDocument, parentNode):
         self.id = 1
         for rssItem in modelDocument.rssItems:
+            rssItem.results = []
             isInline = rssItem.find('isInlineXBRL').text
             node = self.treeView.insert(parentNode, "end", rssItem.objectId(),
                                         text=(rssItem.cikNumber or ''),
@@ -1650,21 +1798,25 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
             self.treeView.set(node, "status", rssItem.status)
             self.treeView.set(node, "period", rssItem.period)
             self.treeView.set(node, "fiscalYrEnd", rssItem.fiscalYearEnd)
-            self.treeView.set(node, "results", " ".join(str(result) for result in (rssItem.results or [])) +
+            self.treeView.set(node, "results", rssItem.results[0] if len(rssItem.results)>0 and isinstance(rssItem.results, list) else \
+                                             " ".join(str(result) for result in (rssItem.results or [])) +
                                                 ((" " + str(rssItem.assertions)) if rssItem.assertions else ""))
             self.id += 1
         else:
             pass
+        return
 
     def btn_cmd_selectAll(self):
         roots = self.treeView.get_children()
         for item in roots:
             self.treeView.selection_add(item)
+        return
 
     def btn_cmd_deselectAll(self):
         roots = self.treeView.get_children()
         for item in roots:
             self.treeView.selection_remove(item)
+        return
     
     def btn_cmd_removeSelected(self):
         selected_items = self.treeView.selection()
@@ -1680,9 +1832,10 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
             for item in not_selected:
                 self.treeView.delete(item)
     
-    def renderEdgarReports(self):
+    def renderEdgarReports(self, saveFolder=None):
         from arellepy.LocalViewerStandalone import startEdgarViewer
         global getQueue_render, MAKEDOTS_RSSDBPANEL
+        ids = self.treeView.selection()
         cntlr = self.modelXbrl.modelManager.cntlr
         appDir = os.path.dirname(cntlr.configDir)
         requiredPlugins = ['validate/EFM','EdgarRenderer','transforms/SEC'] 
@@ -1710,8 +1863,8 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
                     return
             else:
                 pluginsDir.append(p)
-        saveFolder = filedialog.askdirectory(title="Select a directory to save generated Edgar Filings")
-        ids = self.treeView.selection()
+        if not saveFolder:
+            saveFolder = filedialog.askdirectory(title=_("Select a directory to save generated Edgar Filings"))
         if saveFolder:
             getQueue_render = True
             _key = 'render'
@@ -1724,7 +1877,6 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
         else:
             messagebox.showinfo('RSS DB Info', 'No directory was provided to save output, Aborted', parent=self.modelXbrl.modelManager.cntlr.parent)
             return
-
  
     def _saveAs_helper(self):
         from .Constants import pathToTemplates
@@ -1752,6 +1904,12 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
             sortedRssItems = [x[1] for x in sortedItems]
 
             for itemEl in sortedRssItems:
+                _stat = etree.Element('status')
+                _stat.text = getattr(itemEl, 'status', '')
+                _reuslts = etree.Element('results')
+                _reuslts.text = str(getattr(itemEl, 'results', ''))
+                itemEl.append(_stat)
+                itemEl.append(_reuslts)
                 rssChannel.append(itemEl)
             feedString = etree.tostring(rssDoc, pretty_print=True)
             with open(feedF, 'wb') as sf:
@@ -1761,7 +1919,6 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
             cntlr.addToLog(_("Error while saving query to file:\n{}").format(str(e)), messageCode="RssDB.Error", file=f, level=logging.ERROR)
         
         return
-
     
     def btn_cmd_saveAs(self):
         t = threading.Thread(target=self._saveAs_helper, daemon=True)
@@ -1771,6 +1928,8 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
     def btn_cmd_refresh(self):
         qParams = self.queryParams
         self.rssDBFrame.backgroundSearchDB(qParams)
+        return
+
 
     def _backgroundGetQ(self):
         global getQueue_render
@@ -1782,8 +1941,7 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
                 cntlr.waitForUiThreadQueue()
                 cntlr.uiThreadQueue.put((callback[callbackName],args))
         return
-
-            
+           
     def background_renderEdgarReports(self, saveToFolder, ids, pluginsDirs, _key):
         from arellepy.CntlrPy import renderEdgarReports
         global getQueue_render, MAKEDOTS_RSSDBPANEL
@@ -1796,26 +1954,36 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
             pubDateRssItems.append((rssItem.pubDate,rssItem.objectId()))
         for pubDate, rssItemObjectId in sorted(pubDateRssItems, key=lambda x: x[0], reverse=True):
             rssItem = self.modelXbrl.modelObject(rssItemObjectId)
+            if not isinstance(rssItem.results, list):
+                rssItem.results = []
             self.modelXbrl.modelManager.viewModelObject(self.modelXbrl, rssItem.objectId())
             # get information from item
             res = []
             reportFolder = None
             plugins = pluginsDirs
+            statusMsg = ''
             try:
                 rssItem.status = 'Render Edgar Reports'
                 self.modelXbrl.modelManager.viewModelObject(self.modelXbrl, rssItem.objectId())
                 _start = time.perf_counter()
-                reportFolder = renderEdgarReports(rssItem, saveToFolder, plugins, self.multiprocessQueue)
+                reportFolder, errors = renderEdgarReports(rssItem, saveToFolder, plugins, self.multiprocessQueue)                   
                 _end = time.perf_counter()
-                res.append(reportFolder)
-                rssItem.results = [reportFolder]
-                self.modelXbrl.modelManager.viewModelObject(self.modelXbrl, rssItem.objectId())
-                self.modelXbrl.modelManager.cntlr.addToLog(_('Done rendering form {} for {} in {} secs').format(rssItem.formType, rssItem.companyName, round(_end-_start,3)), messageCode="RssDB.Info", file="",  level=logging.INFO)
+                if len(errors):
+                    rssItem.results.extend(errors)
+                    self.modelXbrl.modelManager.viewModelObject(self.modelXbrl, rssItem.objectId())
+                    statusMsg = _('Errors {}  while rendering form {} for {} in {} secs').format(','.join(errors), rssItem.formType, rssItem.companyName, round(_end-_start,3))
+                else:
+                    res.append(reportFolder)
+                    rssItem.results = [reportFolder]
+                    self.modelXbrl.modelManager.viewModelObject(self.modelXbrl, rssItem.objectId())
+                    statusMsg = _('Done rendering form {} for {} in {} secs').format(rssItem.formType, rssItem.companyName, round(_end-_start,3))
+                self.modelXbrl.modelManager.cntlr.addToLog(statusMsg, messageCode="RssDB.Info", file="",  level=logging.INFO)
                 n +=1
             except Exception as e:
                 getQueue_render = False
-                tkr.messagebox.showerror(_("RSS DB Render Edgar error(s)"), str(e), parent=self.modelXbrl.modelManager.cntlr.parent)
-                return
+                # self.modelXbrl.modelManager.cntlr.addToLog('Error while processing {}'.format(str(rssItem)), messageCode="RssDB.Error", file="",  level=logging.ERROR)
+                tkr.messagebox.showerror(_("RSS DB Render Edgar error(s)"), '{}\n{}'.format(str(e), traceback.format_tb(sys.exc_info()[2])), parent=self.modelXbrl.modelManager.cntlr.parent)
+
         getQueue_render = False
         MAKEDOTS_RSSDBPANEL[_key] = False
         endTime = time.perf_counter()
@@ -1823,6 +1991,7 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
         self.btn_renderEdgarReports.config(state='normal')
         self.modelXbrl.modelManager.cntlr.waitForUiThreadQueue()
         self.modelXbrl.modelManager.cntlr.uiThreadQueue.put((self.btn_cmd_deselectAll,[]))
+        return
 
 def rssDBviewRssFeed(modelXbrl, tabWin, title, queryParams, q=None):
     '''based on arelle.ViewWinRssFeed.viewRssFeed'''
@@ -1867,11 +2036,11 @@ def rssDBviewRssFeed(modelXbrl, tabWin, title, queryParams, q=None):
     view.treeView.bind( view.modelXbrl.modelManager.cntlr.contextMenuClick, view.setMenuHtmURLs, '+' )
     cntxMenu = view.contextMenu()
     view.setMenuHtmURLs()
-    rssWatchMenu = tkr.Menu(view.viewFrame, tearoff=0)
-    rssWatchMenu.add_command(label=_("Options..."), underline=0, command=lambda: modelXbrl.modelManager.cntlr.rssWatchOptionsDialog())
-    rssWatchMenu.add_command(label=_("Start"), underline=0, command=lambda: modelXbrl.modelManager.cntlr.rssWatchControl(start=True))
-    rssWatchMenu.add_command(label=_("Stop"), underline=0, command=lambda: modelXbrl.modelManager.cntlr.rssWatchControl(stop=True))
-    cntxMenu.add_cascade(label=_("RSS Watch"), menu=rssWatchMenu, underline=0)
+    # rssWatchMenu = tkr.Menu(view.viewFrame, tearoff=0)
+    # rssWatchMenu.add_command(label=_("Options..."), underline=0, command=lambda: modelXbrl.modelManager.cntlr.rssWatchOptionsDialog())
+    # rssWatchMenu.add_command(label=_("Start"), underline=0, command=lambda: modelXbrl.modelManager.cntlr.rssWatchControl(start=True))
+    # rssWatchMenu.add_command(label=_("Stop"), underline=0, command=lambda: modelXbrl.modelManager.cntlr.rssWatchControl(stop=True))
+    # cntxMenu.add_cascade(label=_("RSS Watch"), menu=rssWatchMenu, underline=0)
     view.menuAddClipboard()
     con_dependent_ui.append(view)
 
@@ -2071,6 +2240,7 @@ class rssDBUpdateSettings(tkr.LabelFrame):
         self.daysVar.set(0)
         self.hoursVar.set(1)
         self.minutesVar.set(0)
+        return
 
 
     def updateDB_btn_func(self):
@@ -2119,13 +2289,13 @@ class rssDBUpdateSettings(tkr.LabelFrame):
 
         self.vals = {x:getattr(self, x) for x in self.params}
         self.accepted = True
-        print(self.vals)
+        # print(self.vals)
 
         try:
             self.rssDBFrame.backGroundUpdateDB(self.vals)
         except Exception as e:
             tkr.messagebox.showerror(title='RSS DB Error - updateDB', message=str(e) + '\n' + traceback.format_exc())
-            return
+        return
 
     # def cancel_btn_func(self):
     #     self.master.destroy()
@@ -2250,6 +2420,7 @@ class rssDBSearchDBPanel(tkr.LabelFrame):
         self.dateFromVar.set('')
         self.dateToVar.set('')
         self.limitVar.set(100)
+        return
 
     def searchDB(self):
         if not self.rssDBFrame.dbConnection or not self.rssDBFrame.dbConnection.checkConnection():
@@ -2287,6 +2458,7 @@ class rssDBSearchDBPanel(tkr.LabelFrame):
         self.searchDB_btn.config(state='disabled')
         t = threading.Thread(target=self.rssDBFrame.backgroundSearchDB, args=(self.vals,), daemon=True)
         t.start()
+        return
         
     def openIndustrySelector(self):
         global industryCodesSelection
@@ -2294,3 +2466,5 @@ class rssDBSearchDBPanel(tkr.LabelFrame):
         if industryCodesSelection:
             self.assignedSicVar.set('')
             self.assignedSicVar.set(', '.join(industryCodesSelection))
+        return
+

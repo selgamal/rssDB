@@ -16,7 +16,9 @@ from calendar import monthrange
 from lxml import html, etree
 from .Constants import rssTables, getTablesFuncs, pathToSQL, rssCols, RSSFEEDS, stateCodes, wait_duration, pathToTemplates
 from arelle.UrlUtil import parseRfcDatetime
-from arelle import XmlUtil
+from arelle import XmlUtil, ValidateXbrl, ModelXbrl
+from arelle.FileSource import openFileSource
+from arelle.PluginManager import pluginClassMethods
 
 try:
     from arellepy.HelperFuncs import chkToList, convert_size, xmlFileFromString
@@ -24,8 +26,46 @@ try:
     from arellepy.LocalViewerStandalone import initViewer
 except:
     from .arellepy.HelperFuncs import chkToList, convert_size, xmlFileFromString
-    from .arellepy.CntlrPy import CntlrPy, subProcessCntlrPy, renderEdgarReportsFromRssItems
+    from .arellepy.CntlrPy import CntlrPy, renderEdgarReportsFromRssItems
     from .arellepy.LocalViewerStandalone import initViewer
+
+try:
+    from xbrlDB import storeIntoDB, dbProduct
+    from xbrlDB.XbrlSemanticSqlDB import XbrlSqlDatabaseConnection
+    from xbrlDB.XbrlOpenSqlDB import XbrlSqlDatabaseConnection as OpenXbrlSqlDatabaseConnection
+    from xbrlDB.XbrlPublicPostgresDB import XbrlPostgresDatabaseConnection
+except:
+    try:
+        from arelle.plugin.xbrlDB import storeIntoDB, dbProduct
+        from arelle.plugin.xbrlDB.XbrlSemanticSqlDB import XbrlSqlDatabaseConnection
+        from arelle.plugin.xbrlDB.XbrlOpenSqlDB import XbrlSqlDatabaseConnection as OpenXbrlSqlDatabaseConnection
+        from arelle.plugin.xbrlDB.XbrlPublicPostgresDB import XbrlPostgresDatabaseConnection
+    except:
+        from plugin.xbrlDB import storeIntoDB, dbProduct
+        from plugin.xbrlDB.XbrlSemanticSqlDB import XbrlSqlDatabaseConnection
+        from plugin.xbrlDB.XbrlOpenSqlDB import XbrlSqlDatabaseConnection as OpenXbrlSqlDatabaseConnection
+        from plugin.xbrlDB.XbrlPublicPostgresDB import XbrlPostgresDatabaseConnection
+
+hasRefManager = False
+
+try:
+    from EdgarRenderer import RefManager
+    hasRefManager = True
+except:
+    pass
+
+
+_dbTypes = {
+        "postgres":XbrlPostgresDatabaseConnection,
+        "mssqlSemantic": XbrlSqlDatabaseConnection,
+        "mysqlSemantic": XbrlSqlDatabaseConnection,
+        "orclSemantic": XbrlSqlDatabaseConnection,
+        "pgSemantic": XbrlSqlDatabaseConnection,
+        "sqliteSemantic": XbrlSqlDatabaseConnection,
+        "sqliteDpmDB": XbrlSqlDatabaseConnection,
+        "pgOpenDB": OpenXbrlSqlDatabaseConnection,
+    }   
+
 
 
 def _startDBReport(conn, host='0.0.0.0', port=None, debug=False, asDaemon=True, fromDate=None, toDate=None, threaded=True):
@@ -192,6 +232,7 @@ def _populateFilersInfo(conn):
         conn.cntlr.addToLog(_("Error while populating filersInfo:\n{}").format(str(e)), messageCode="RssDB.Error", file=conn.conParams.get('database', ''), level=logging.ERROR)
         if conn.product == 'postgres' and flag:
             conn.rollback()
+    return
 
 def _getLastBuild(fPath, feedMonth):
     """helper function for concurrent executor parses feed xml for lastbuildDate"""
@@ -740,6 +781,8 @@ def _makeRssFeedLikeXml(conn, dbFilings_dicts, dbFiles_dicts, saveAs=None, retur
     for d in dbFilings_dicts:
         d['pubDate'] = parser.parse(d['pubDate']).strftime("%a, %d %b %Y %H:%M:%S %Z") if isinstance(
             d['pubDate'], str) else d['pubDate'].strftime("%a, %d %b %Y %H:%M:%S %Z")
+        d['acceptanceDatetime'] = parser.parse(d['acceptanceDatetime']).strftime("%Y%m%d%H%M%S") if isinstance(
+            d['acceptanceDatetime'], str) else d['acceptanceDatetime'].strftime("%Y%m%d%H%M%S")
         d['filingDate'] = parser.parse(d['filingDate']).strftime(
             "%m/%d/%Y") if isinstance(d['filingDate'], str) else d['filingDate'].strftime("%m/%d/%Y")
         d['fiscalYearEnd'] = d['fiscalYearEnd'].replace('-', '') if d['fiscalYearEnd'] else ''
@@ -875,3 +918,93 @@ def runRenderEdgar(mainCntlr, rssItems=None, saveToFolder=None, pluginsDirs=None
 
 def initLocalEdgarViewer(cntlr, lookinFolder=None, edgarDir=None, threaded=True):
     initViewer(cntlr=cntlr, lookinFolders=lookinFolder, edgarDir=edgarDir, threaded=threaded)
+    return
+
+def storeInToXbrlDB(cntlr, rssItems, params, selectionButton=None):
+    global hasRefManager
+    if selectionButton:
+        selectionButton.config(state='disabled')
+    dbCon =[x.strip() for x in params.split(',')]
+    _dbCon = [x if x else None for x in dbCon]
+    mx = rssItems[0].modelXbrl
+    # check if items already in db
+    conFunc = _dbTypes.get(_dbCon[6], None)
+    if conFunc:
+        existingFilings = dict()
+        try:
+            conn = conFunc(mx, _dbCon[2], _dbCon[3],_dbCon[0], _dbCon[1], _dbCon[4], _dbCon[5], dbProduct.get(_dbCon[6], None))
+            result = conn.execute("SELECT filing_accession_number, accepted_timestamp FROM accession" if _dbCon[6]=='postgres' \
+                                    else  "SELECT filing_number, accepted_timestamp FROM filing", fetch=True)
+            existingFilings = dict((filingNumber, timestamp) 
+                                for filingNumber, timestamp in result)
+        except Exception as e:
+            cntlr.addToLog(_("Could not make initial check if items exist in DB"), messageCode='arellePy.Info', level=logging.INFO)
+        for _i in rssItems:
+            _i.skipRssItem = False
+            if (_i.accessionNumber in existingFilings and
+                str(_i.acceptanceDatetime) == str(existingFilings[_i.accessionNumber])):
+                _i.skipRssItem = True
+
+    def viewObj(rssItem, res='', stat='', _cntlr=cntlr):
+        if res:
+            rssItem.results.insert(0,res)
+        if stat:
+            rssItem.status = stat
+        if _cntlr.hasGui:
+            rssItem.modelXbrl.modelManager.viewModelObject(rssItem.modelXbrl, rssItem.objectId())
+        return
+    for rssItem in rssItems:
+        modelXbrl = None
+        hasMxVar = True
+        viewObj(rssItem, stat='Checking if in DB' )
+        if rssItem.skipRssItem:
+            viewObj(rssItem, 'Skipped', 'Already In DB')
+            cntlr.addToLog(_("Filing with accession {} already in DB - Skipped").format(rssItem.accessionNumber), file=rssItem.url, messageCode='arellePy.Info', level=logging.INFO)
+            continue
+        try:
+            retries = 0
+            badUrl = True
+            viewObj(rssItem, "Getting Filing")
+            while badUrl and retries <=3: # try to get filing 3 times without file not downloaded error
+                modelXbrl = ModelXbrl.load(cntlr.modelManager, openFileSource(rssItem.zippedUrl, cntlr))
+                if 'FileNotLoadable' in modelXbrl.errors:
+                    viewObj(rssItem, stat="not loadable try {}".format(retries+1))
+                    modelXbrl.close()
+                    del modelXbrl
+                    hasMxVar = False
+                    badUrl = True
+                    retries +=1
+                else:
+                    badUrl = False
+            if badUrl:
+                viewObj(rssItem, res='Download Failed')
+                cntlr.addToLog(_('Could not fetch filing {}').format(rssItem.url), messageCode='arellePy.Error', level=logging.ERROR)
+                continue
+            viewObj(rssItem, 'Filing Downloaded')
+            if hasRefManager and hasMxVar:
+                cntlr.logDebug = lambda x: cntlr.addToLog(x, level=logging.DEBUG) # needed for ref manager
+                try:
+                    viewObj(rssItem, stat='Getting Refs')
+                    edgarResourcesFolder = os.path.join(os.path.dirname(RefManager.__file__), 'resources')
+                    RefManager.RefManager(edgarResourcesFolder).loadAddedUrls(modelXbrl, modelXbrl.modelManager.cntlr)
+                    viewObj(rssItem, res='Downloaded Refs')
+                except Exception as e:
+                    cntlr.addToLog(_('Could not load additional files for filing {}\n{}').format(rssItem.url, str(e)), messageCode='arellePy.Info', level=logging.INFO)
+            viewObj(rssItem, stat="Inserting Into DB")
+            storeIntoDB(dbCon, modelXbrl, rssItem)
+            viewObj(rssItem, res="Inserted Into DB")
+            modelXbrl.close()
+            del modelXbrl
+            hasMxVar = False
+        except Exception as e:
+            cntlr.addToLog('{}\n{}'.format(str(e), traceback.format_tb(sys.exc_info()[2])), messageCode='arellePy.Error', level=logging.ERROR)
+            viewObj(rssItem, res="Failed")
+            if hasMxVar:
+                modelXbrl.close() if modelXbrl else None
+            del modelXbrl
+            hasMxVar = False
+            continue
+    if selectionButton:
+        selectionButton.config(state='normal')        
+    return
+        

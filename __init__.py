@@ -1,6 +1,6 @@
 '''Create and update a simple database to track `Monthly` SEC rss for XBRL filings
 
-Based on xbrlDB plugin, this plugin creates a database to track filings avaliable through
+Based on xbrlDB plugin, this plugin creates a database to track filings available through
 SEC monthly rss feeds for XBRL filings, and provide tools to work with filings information
 included in these feeds. Selected data points can be attached to each filing, to 
 provide for quick analysis without having to store the whole filing.
@@ -28,7 +28,7 @@ def rssDBToolBarExtender(cntlr, toolbar):
         from RssDBPanel import toolBarExtender
 
     toolBarExtender(cntlr=cntlr, toolbar=toolbar)
-
+    return
 
 def rssDBCmdLineOptionExtender(parser, *args, **kwargs):
     # DB connection group
@@ -130,11 +130,17 @@ def rssDBCmdLineOptionExtender(parser, *args, **kwargs):
     parser.add_option("--rssDBAddFormulaReplaceExistingFormula", action='store_true', dest="rssDBAddFormulaReplaceExistingFormula", default=False,
                         help=_("When this flag is set, If entered formula id in 'rssDBAddFormulaFormulaId' exists in db, it will be updated"))
     
+    # Store search results into XBRL DB
+    parser.add_option("--rssDBStoreSearchResultsIntoXBRLDB", action='store', dest="rssDBStoreSearchResultsIntoXBRLDB",
+                        help=_("Enter Connection paramaters for xbrlDB database to store search results (if any). Connection params are comma separated string as follows: "
+                                "host,port,user,password,database[,timeout[,{'postgres|mssqlSemantic|mysqlSemantic|orclSemantic|pgSemantic|sqliteSemantic|pgOpenDB|sqliteDpmDB|rexster|rdfDB|json'}]]"))
 
 def utilityRun(cntlr, options, **kwargs):
     gettext.install('arelle')
     # pass options to cntlr
-    print('rssDB utility run now!!')
+    # print('rssDB utility run now!!')
+    # cntlr.config.setdefault("rssQueryResultsActions", {})
+    # cntlr.rssQueryResultsActions = cntlr.config.get("rssQueryResultsActions")
 
     if getattr(options, 'rssDBFormulaRemoveDups', False):
         cntlr.rssDBFormulaRemoveDups = options.rssDBFormulaRemoveDups
@@ -159,8 +165,6 @@ def utilityRun(cntlr, options, **kwargs):
             cntlr.addToLog(_('Only one of  "--arellepyRunFormulaFromDB" or "--arellepyRunFormula" can be chosen'),
                     messageCode="arellepy.Error", file=__name__,  level=logging.ERROR)
             raise Exception(_('Only one of  "--arellepyRunFormulaFromDB" or "--arellepyRunFormula" can be chosen'))
-
-
 
     if options.rssDBconnect: # initiates rss db connection, everything depends on this
         try:
@@ -272,10 +276,11 @@ def utilityRun(cntlr, options, **kwargs):
                 except:
                     from rssDB.CommonFunctions import  _makeRssFeedLikeXml, runRenderEdgar, initLocalEdgarViewer
                 
-                                
+                # TODO: Can also be rendered as one of the views
+                resultFile = rssItems = None                      
                 resultFile, rssItems = _makeRssFeedLikeXml(conn=con ,dbFilings_dicts=qResult['filings'], dbFiles_dicts=qResult['files'], saveAs=options.rssDBsearchresultFile, returnRssItems=True)
-                cntlr.addToLog(_('Search Result saved to {}').format(resultFile),
-                                 messageCode="RssDB.Info", file=resultFile,  level=logging.INFO)
+                cntlr.addToLog(_('Search Result saved to {}').format(resultFile) if resultFile else _('Result file not produces!'),
+                                 messageCode="RssDB.Info" if resultFile else "RssDB.Error", file=resultFile,  level=logging.INFO if resultFile else logging.ERROR)
                 
                 if rssItems:
                     con.searchResults = rssItems
@@ -312,8 +317,15 @@ def utilityRun(cntlr, options, **kwargs):
                         else:
                             cntlr.addToLog(_('Output folder for rendered edgar reports must be provided "--rssDBsearchEdgarRenderFolder"'),
                                             messageCode="RssDB.Error", file=resultFile,  level=logging.ERROR)
-                            return
-        
+                    if options.rssDBStoreSearchResultsIntoXBRLDB:
+                        from .CommonFunctions import storeInToXbrlDB
+                        try:
+                            for _i in rssItems:
+                                _i.status = None
+                                _i.results = []
+                            storeInToXbrlDB(cntlr=cntlr,rssItems= rssItems,params=options.rssDBStoreSearchResultsIntoXBRLDB)
+                        except Exception as e:
+                            cntlr.addToLog(str(e), messageCode="RssDB.Error",  level=logging.ERROR)
         if options.arellepyRunFormula:
             itemsToProcess = []
             _runFormula=True
@@ -337,7 +349,7 @@ def utilityRun(cntlr, options, **kwargs):
                     cntlr.formulaeResults = defaultdict(dict)
                 try:
                     from arellepy.CntlrPy import runFormula
-                    print('ITEMS TO PROCESS', itemsToProcess)
+                    # print('ITEMS TO PROCESS', itemsToProcess)
                     # writeFormulaToSourceFile=False, saveResultsToFolder=False, folderPath=None
                     runFormulaResults = runFormula(cntlr=cntlr, instancesUrls=itemsToProcess,
                                                 formulaString = options.arellepyRunFormulaString,
@@ -379,7 +391,6 @@ def utilityRun(cntlr, options, **kwargs):
             while qMe:
                 # cmd = input('{}{}{}{}Enter q to quit: '.format(msg1, sep, msg2, sep2))
                 cmd = input('\n\n\n{}\nEnter {}: '.format('\n'.join(qMsg), ', '.join(qInstruction)))
-                print(cmd)
                 if cmd in ['q', '0']:
                     if autoUpdateThread and not con.autoUpdateConnection.updateStopped:
                         con.autoUpdateConnection.autoUpdateSet = False
@@ -394,7 +405,6 @@ def utilityRun(cntlr, options, **kwargs):
                 if cmd == 'q':
                     qMe = False
 
-
 def ValidateFormulaFinished(val):
     # Removes duplicates from from formula output and adds some identifying information to be stored with the output
     cntlr = val.modelXbrl.modelManager.cntlr
@@ -406,6 +416,7 @@ def ValidateFormulaFinished(val):
 def dummyFunc(*args, **kwargs):
     # dummy for class method CntlrWinMain.Menu to force arelle to restart
     pass
+
 
 
 __pluginInfo__ = {

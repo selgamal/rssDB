@@ -4,7 +4,6 @@ implemented database products:
     - Postgresql
     - MongoDB
 """
-
 import sys, os, re, time, glob, io, json, gettext, gc, tempfile, logging, calendar, concurrent.futures, threading, traceback, pickle
 from tkinter.filedialog import SaveAs
 from concurrent.futures import as_completed
@@ -28,9 +27,6 @@ except:
         from arelle.plugin.xbrlDB.SqlDb import SqlDbConnection, XPDBException, pg8000
     except:
         from plugin.xbrlDB.SqlDb import SqlDbConnection, XPDBException, pg8000
-# from arelle import ModelDocument
-# from arelle.ModelValue import qname
-# from arelle.ValidateXbrlCalcs import roundValue
 
 try:
     from arellepy.HelperFuncs import chkToList, convert_size, xmlFileFromString
@@ -41,7 +37,6 @@ except:
     from .arellepy.CntlrPy import CntlrPy, subProcessCntlrPy, renderEdgarReportsFromRssItems
     from .arellepy.LocalViewerStandalone import initViewer
 
-
 hasMongoDB = True
 
 try:
@@ -49,10 +44,7 @@ try:
 except Exception as e:
     hasMongoDB = False
 
-
 TRACESQLFILE = None
-
-
 
 sqlScriptsFiles = {
     'sqlite': ['sqliteCreateRssDB.sql', 'industryClassificationDataInsert.sql'],
@@ -61,8 +53,6 @@ sqlScriptsFiles = {
 
 mongodbSchemaFile = os.path.join(pathToSQL, 'mongodbSchema.json')
 mongodbIndustryClassificationFile = os.path.join(pathToSQL, 'mongodbIndustryClassification.json')
-
-
 
 MAKEDOTS_RSSDB = False 
 
@@ -82,11 +72,6 @@ def dotted(cntlr, xtext='Processing'):
     cntlr.waitForUiThreadQueue()
     cntlr.uiThreadQueue.put((cntlr.showStatus,['']))
     return
-
-
-
-
-
 
 def rssDBConnection(cntlr, **kwargs):
     '''Shortcut to connect to db, returns connection object of the appropriate type
@@ -381,9 +366,6 @@ def _updateRssFeeds(conn, loc=None, getRssItems=False, updateDB=False, maxWorker
     conn.addToLog(_msg, messageCode="RssDB.Info", file=conn.conParams.get('database',''),  level=logging.INFO)
     return result
 
-
-
-
 class rssSqlDbConnection(SqlDbConnection):
     """Few modifications to sqlDBConnection class"""
     def __init__(self, cntlr, user, password, host, port, database, timeout, product, schema, createSchema=False, createDB=False):
@@ -554,9 +536,10 @@ class rssSqlDbConnection(SqlDbConnection):
 
         if self.product == 'postgres':
             pg8000.paramstyle = pgParamStyle
-
+        res = None
         if returnData:
-            return formulaData
+            res = formulaData
+        return res
 
 
     def removeFormulaFromDb(self, formulaIds):
@@ -568,11 +551,10 @@ class rssSqlDbConnection(SqlDbConnection):
         except Exception as e:
             self.rollback()
             self.addToLog(_('Error while removing formula(e) with id(s) {}:\n{}').format(str(formulaIds), str(e)), messageCode="RssDB.Error", file=self.conParams.get('database', ''), level=logging.ERROR)
-
+        return
 
     def startDBReport(self, host='0.0.0.0', port=None, debug=False, asDaemon=True, fromDate=None, toDate=None, threaded=True):
         return _startDBReport(self, host, port, debug, asDaemon, fromDate, toDate, threaded)
-
 
     def checkConnection(self):
         chk = False
@@ -586,7 +568,6 @@ class rssSqlDbConnection(SqlDbConnection):
                 else:
                     chk = os.path.basename(self.execute('PRAGMA database_list;', fetch=True)[0][2]) == os.path.basename(db)
         except Exception as e:
-            # print(e)
             pass
         return chk
 
@@ -706,8 +687,6 @@ class rssSqlDbConnection(SqlDbConnection):
         select x.*, c."feedMonth" from x left join "feedsInfo" c on x."feedId"=c."feedId"
         '''.format(qFromDate, qToDate)
 
-        print(sql1)
-
         # filers' locations
         sql2 = '''select a."cikNumber", a."conformedName", b.* 
                   from "filersInfo" a left join "locations" b on lower(a."businessState") = lower(b."code")'''
@@ -739,11 +718,13 @@ class rssSqlDbConnection(SqlDbConnection):
                 print(msg, end=end)
             else:
                 self.cntlr.showStatus(msg, clearAfter)
+        return
 
 
     def addToLog(self, msg, **kwargs):
         if self.cntlr is not None:
             self.cntlr.addToLog(msg, **kwargs)
+        return
 
 
     def changeSchema(self, schema, createIfNotExist=True):
@@ -759,6 +740,7 @@ class rssSqlDbConnection(SqlDbConnection):
                         schema), action=stat, fetch=False, commit=True)
             self.execute('SET search_path = "{}";'.format(schema), fetch=False)
             self.showStatus(_('Path set to {}').format(schema))
+        return
             
 
     def tablesInDB(self):
@@ -923,6 +905,7 @@ class rssSqlDbConnection(SqlDbConnection):
         self.conn.commit()
         self.modelXbrl.profileStat(_("XbrlPublicDB: create tables"), time.time() - startedAt)
         self.closeCursor()
+        return
 
 
     def insertUpdateRssDB(self, inputData, dbTable, action='insert', updateCols=None, idCol=None, commit=False, returnStat=False):
@@ -1255,7 +1238,6 @@ class rssSqlDbConnection(SqlDbConnection):
         _returnCols = '*'
         if returnCols:
             _returnCols = ', '.join(['"' + x + '"' for x in returnCols])
-            print(_returnCols)
         
         if not additionalWhereClauseString:
             additionalWhereClauseString = ''
@@ -1380,7 +1362,7 @@ class rssSqlDbConnection(SqlDbConnection):
         self.addToLog(_('Creating/updating filers dump'), messageCode='RssDB.Info', file=self.conParams.get('database', ''), level=logging.INFO)
         with open(fileName, 'wb') as f:
             pickle.dump(filersInfoDict, f)
-
+        return
 
 class rssMongoDbConnection:
     def __init__(self, cntlr, host, database, user, password, port, timeout, product, schema, createSchema=False, createDB=False):
@@ -1502,12 +1484,14 @@ class rssMongoDbConnection:
             'dateTimeAdded': datetime.now().replace(microsecond=0)
         }
         
-        
+
         self.insertUpdateRssDB(formulaData, 'formulae', action=action, updateFields=None, idField='formulaId', commit=True, returnStat=False)  
         self.cntlr.addToLog(_('Formula id "{}" {}').format(formulaId, action + 'ed' if action=='insert' else action + 'd'), messageCode="RssDB.Info", file=self.conParams.get('database',''), level=logging.INFO)
-
+        
+        res = dict()
         if returnData:
-            return formulaData
+            res = formulaData            
+        return res
  
     def removeFormulaFromDb(self, formulaIds):
         try:
@@ -1515,6 +1499,7 @@ class rssMongoDbConnection:
             self.addToLog(_('Removed formula(e) with id(s) {}').format(str(formulaIds)), messageCode="RssDB.Info", file=self.conParams.get('database', ''), level=logging.INFO)
         except Exception as e:
             self.addToLog(_('Error while removing formula(e) with id(s) {}:\n{}').format(str(formulaIds), str(e)), messageCode="RssDB.Error", file=self.conParams.get('database', ''), level=logging.ERROR)
+        return
 
     def startDBReport(self, host='0.0.0.0', port=None, debug=False, asDaemon=True, fromDate=None, toDate=None, threaded=True):
         return _startDBReport(self, host, port, debug, asDaemon, fromDate, toDate, threaded=threaded)
@@ -1524,6 +1509,7 @@ class rssMongoDbConnection:
             self.mongoClient.close()
             del self.mongoClient
             del self.dbConn
+        return
 
     def checkConnection(self):
         chk = False
@@ -1729,14 +1715,17 @@ class rssMongoDbConnection:
                 print(msg, end=end)
             else:
                 self.cntlr.showStatus(msg, clearAfter)
+        return
 
     def addToLog(self, msg, **kwargs):
         if self.cntlr is not None:
             self.cntlr.addToLog(msg, **kwargs)
+        return
 
     def changeDb(self, dbName):
         self.dbName = dbName
         self.dbConn = self.mongoClient[dbName]
+        return
 
     def collectionsInDb(self):
         return self.dbConn.list_collection_names()
@@ -1812,6 +1801,7 @@ class rssMongoDbConnection:
         except Exception as e:
             self.addToLog(e._message, messageCode="RssDB.Error", file=getattr(self, 'dbName', ''),  level=logging.ERROR)
             raise e
+        return
 
     def insertUpdateRssDB(self, inputData, dbCollection, action='insert', updateFields=None, idField=None, commit=False, returnStat=False):
         '''action either `insert` or `update` '''
@@ -1832,9 +1822,9 @@ class rssMongoDbConnection:
                 try:
                     res = self.dbConn[dbCollection].insert_many(_inputData)
                 except BulkWriteError as bwe:
-                    print(bwe.details)
-                    #you can also take this component and do more analysis
-                    #errors = bwe.details['writeErrors']
+                    self.showStatus(bwe.details)
+                    # Can also take this component and do more analysis
+                    # errors = bwe.details['writeErrors']
                     raise 
             elif action == 'update':
                 from pymongo import UpdateOne
@@ -1935,7 +1925,6 @@ class rssMongoDbConnection:
                 y = None
                 for n, flr in enumerate(xFilers):
                     if flr['cikNumber'] == x['cikNumber']:
-                        # print(n)
                         y = xFilers.pop(n)
                         break
                 if y:
@@ -2206,7 +2195,7 @@ class rssMongoDbConnection:
         self.addToLog(_('Creating/updating filers dump'), messageCode='RssDB.Info', file=self.conParams.get('database', ''), level=logging.INFO)
         with open(fileName, 'wb') as f:
             pickle.dump(filersInfoDict, f)
-
+        return
 
 def _makeMongoDBIndustryClassifications(cntlr, relativesFields = ['industry_id', 'industry_code', 'industry_description', 'depth'] ):
     '''Creates industry collection data based on industry table in semantic model

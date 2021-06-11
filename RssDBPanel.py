@@ -1283,6 +1283,7 @@ class runFormulaDialog(tkr.Toplevel):
         self.view()
 
         con_dependent_ui.append(self)
+        self.grab_set()
         if not includeRun:
             self.wait_window(self)
 
@@ -1645,6 +1646,8 @@ class storeInXbrlDBSettings(tkr.Toplevel):
         self.btn_store_action.grid(row=1, column=0, columnspan=4, sticky=tkr.EW)
 
         makeWeight(storeInXbrlDBFrame,rows=False)
+        self.grab_set() # block changing for treeview
+        self.wait_window() 
 
     def btn_cmd_store_action(self):
         if self.storeInXbrlDBEntry.value:
@@ -1762,6 +1765,10 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
         return
 
     def btn_cmd_formula(self):
+        # make sure there is a selection
+        if not len(self.treeView.selection()):
+            messagebox.showerror(_("RSS DB Info"), _("There are no Rss Items selected"), parent=self.modelXbrl.modelManager.cntlr.parent)
+            return
         # make sure we are using same connection that produced the search result
         if self.conKey == getattr(self.modelXbrl.modelManager.cntlr.dbConnection, 'conParams', None):
             formulaDialog = runFormulaDialog(self, self.modelXbrl.modelManager.cntlr, self.modelXbrl.modelManager.cntlr.parent, self.btn_formula,includeRun=True)

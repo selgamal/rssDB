@@ -415,7 +415,7 @@ def _getMonthlyFeedsLinks(conn, loc=None, maxWorkers=None, dateFrom=None, dateTo
             else:
                 conn.addToLog(_('{} returned code {}').format(loc, feedsPage.code), messageCode="RssDB.Info", file=conn.conParams.get('database',''), level=logging.INFO)
         except Exception as e:
-            conn.addToLog(_('Error while getting feeds:\n{}').format(str(e)), messageCode="RssDB.Error", file=conn.conParams.get('database',''), level=logging.ERROR)
+            conn.addToLog(_('Error while getting feeds:\n{}\n{}').format(str(e), traceback.format_tb(sys.exc_info()[2])), messageCode="RssDB.Error", file=conn.conParams.get('database',''), level=logging.ERROR)
     else:
         raise ValueError('Don''t know what to do with {}'.format(loc))
     

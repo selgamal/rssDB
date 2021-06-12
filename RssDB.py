@@ -410,6 +410,7 @@ class rssSqlDbConnection(SqlDbConnection):
                 self.rollback()
                 raise e
         self.schema = schema
+        self.conParams['schema'] = schema
 
         if product=='postgres' and createSchema:
             chkTables = self.verifyTables(createTables=False, dropPriorTables=False)
@@ -601,9 +602,12 @@ class rssSqlDbConnection(SqlDbConnection):
                     dbSize = ''
                     if self.product == 'postgres':
                         try:
-                            _dbSize = self.execute("SELECT pg_database_size('{}')".format(self.conParams['database']))[0][0]
+                            _relsSize = '''SELECT sum(pg_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)))
+                                            FROM pg_tables 
+                                            WHERE schemaname = \'{}\' '''
+                            _dbSize = self.execute(_relsSize.format(self.conParams['schema']))[0][0]
                             dbSize = convert_size(_dbSize, 'GB')[2]
-                        except:
+                        except Exception as e:
                             self.rollback()
                     elif self.product == 'sqlite':
                         try:

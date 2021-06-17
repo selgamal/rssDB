@@ -73,7 +73,7 @@ The above command preforms the follows:
 4. Stores the submissions from the search results into xbrlDB  
 
 ## An Example MS Power BI report based on the database created by this plugin
-[![power bi report](./assets/rssDBReportImage.png)](https://app.powerbi.com/view?r=eyJrIjoiNDNhNWNkMjItY2ZlOS00YjJjLTg2MWEtMjFiMGI4YmU3MTBkIiwidCI6ImMwMzMzYzA0LTJhZGItNDY0Ny1iOWJlLTEyODUxY2U3MGI4NyIsImMiOjh9&embedImagePlaceholder=true&pageName=ReportSectione29712ebca87fe362af8)
+[![power bi report](./assets/rssDBReportImage.png)](https://app.powerbi.com/view?r=eyJrIjoiNDNhNWNkMjItY2ZlOS00YjJjLTg2MWEtMjFiMGI4YmU3MTBkIiwidCI6ImMwMzMzYzA0LTJhZGItNDY0Ny1iOWJlLTEyODUxY2U3MGI4NyIsImMiOjh9&embedImagePlaceholder=true&pageName=ReportSectione29712ebca87fe362af8){:target="_blank"}
 
 **DISCLAIMER:** The code in this project was created for research and personal use purposes **ONLY**, is provided as is without any guarantees or implied or express warranties. This project depends and uses code from [Arelle project](https://github.com/Arelle/Arelle) but is NOT a part of that project.
 

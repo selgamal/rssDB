@@ -1752,10 +1752,13 @@ class ViewRssDBQuery(ViewWinRssFeed.ViewRssFeed):
         if self.modelXbrl:
             self.tabWin.forget(self.viewFrame)
             self.modelXbrl.views.remove(self)
-            self.modelXbrl.modelManager.close()
-            self.modelXbrl.modelManager.cntlr.dbConnection.searchResultsModelXbrl = None
-            del self.modelXbrl
-            self.view = None
+            # self.modelXbrl.modelManager.close()
+            # try:
+            #     self.modelXbrl.modelManager.cntlr.dbConnection.searchResultsModelXbrl.close()
+            #     # del self.modelXbrl
+            #     self.view = None
+            # except:
+            #     pass
         con_dependent_ui.remove(self)
         return
 

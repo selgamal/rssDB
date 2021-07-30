@@ -395,7 +395,7 @@ def _getMonthlyFeedsLinks(conn, loc=None, maxWorkers=None, dateFrom=None, dateTo
     elif urlPattern.match(loc):
         feedsPage = None
         try:
-            feedsPage = request.urlopen(loc)
+            feedsPage = conn.cntlr.webCache.opener.open(loc) #request.urlopen(loc)
             if feedsPage.code == 200:
                 conn.showStatus(_('Getting feeds info from {}').format(loc))
                 tree = html.parse(feedsPage).getroot().xpath('.//table//tr[child::td]')

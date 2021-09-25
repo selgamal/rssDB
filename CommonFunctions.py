@@ -16,7 +16,7 @@ from calendar import monthrange
 from lxml import html, etree
 from .Constants import rssTables, getTablesFuncs, pathToSQL, rssCols, RSSFEEDS, stateCodes, wait_duration, pathToTemplates
 from arelle.UrlUtil import parseRfcDatetime
-from arelle import XmlUtil, ValidateXbrl, ModelXbrl
+from arelle import XmlUtil, ValidateXbrl, ModelXbrl, Cntlr
 from arelle.FileSource import openFileSource
 from arelle.PluginManager import pluginClassMethods
 
@@ -529,7 +529,7 @@ def _getFilerInformation(conn, ciks:list, i=None, _all=None, timeOut=5, maxWorke
         maxWorkers = 4
         
     if maxWorkers > 4:
-        # cannot make more than 10 requests per second with sec.gov so max workers should be 4 max
+        # cannot make more than 10 requests per second with sec.gov so max workers are set to 4 max for safety
         maxWorkers = 4
     
     ciksLst = chkToList(ciks, str)
@@ -544,7 +544,7 @@ def _getFilerInformation(conn, ciks:list, i=None, _all=None, timeOut=5, maxWorke
         # windows app and multiprocessing issues!
         conn.addToLog(_('Not using multiprocessing to get filers information'), messageCode="RssDB.Info", file=conn.conParams.get('database',''),  level=logging.INFO)
         for c in ciksLst:
-            res = _filerInformation(c, timeOut=timeOut, dbType=conn.product)
+            res = _filerInformation(c, timeOut=timeOut, dbType=conn.product, mp=False, webcache=conn.cntlr.webCache)
             hasInfo = res.get('filerInfo')
             cik_db = res.get('cik')
             msg = '{}/{} '.format(i, _all)
@@ -556,7 +556,6 @@ def _getFilerInformation(conn, ciks:list, i=None, _all=None, timeOut=5, maxWorke
                 missing.append(cik_db)
             conn.showStatus(msg, 2000, end='\r')
             i +=1
-            time.sleep(.1) # make sure we dont spam sec.gov
     else:
         conn.addToLog(_('Using multiprocessing to get filers information'), messageCode="RssDB.Info", file=conn.conParams.get('database',''),  level=logging.INFO)
         with concurrent.futures.ProcessPoolExecutor(max_workers= maxWorkers if maxWorkers <= 4 else 4) as executor:
@@ -582,11 +581,17 @@ def _getFilerInformation(conn, ciks:list, i=None, _all=None, timeOut=5, maxWorke
         conn.addToLog(_('Could not retrieve {} cik(s): {}').format(len(missing), missing), messageCode="RssDB.Info", file=conn.conParams.get('database',''),  level=logging.INFO)
     return {'retrived':filerInfos, 'missing': missing, 'i':i}
 
-def _filerInformation(cik, timeOut, dbType):
+def _filerInformation(cik, timeOut, dbType, waitTime=1, mp=True, webcache=None):
+    if mp:
+        from arelle import Cntlr
+        c = Cntlr.Cntlr(logFileName="logToPrint")
+        webcache = c.webCache
+
     url = 'https://www.sec.gov/cgi-bin/browse-edgar?CIK={}&action=getcompany&output=atom'.format(cik)
     filerInformation = dict()
     try:
-        resp = request.urlopen(url, timeout=timeOut)
+        # resp = request.urlopen(url, timeout=timeOut)
+        resp = webcache.opener.open(url, timeout=timeOut)
         tree = etree.parse(resp)
         root = tree.getroot()
         ns = root.nsmap
@@ -630,6 +635,10 @@ def _filerInformation(cik, timeOut, dbType):
             filerInformation['country'] =  stateCodes.get(state.upper())[0]
     except Exception:
         pass
+    del webcache
+    c.close()
+    del c
+    time.sleep(waitTime) # make sure we don't spam sec.gov
     return {'filerInfo' : filerInformation, 'cik': cik }
 
 def _xDoAll(conn, loc=None, last=None, dateFrom=None, dateTo=None, getRssItems=True, returnInfo=False, 

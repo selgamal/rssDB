@@ -635,9 +635,10 @@ def _filerInformation(cik, timeOut, dbType, waitTime=1, mp=True, webcache=None):
             filerInformation['country'] =  stateCodes.get(state.upper())[0]
     except Exception:
         pass
-    del webcache
-    c.close()
-    del c
+    if mp:
+        del webcache
+        c.close()
+        del c
     time.sleep(waitTime) # make sure we don't spam sec.gov
     return {'filerInfo' : filerInformation, 'cik': cik }
 

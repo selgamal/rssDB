@@ -93,10 +93,17 @@ def rssDBConnection(cntlr, **kwargs):
     global hasMongoDB, MongoClient, ASCENDING, DESCENDING
     if not kwargs.get('product') in DBTypes:
         raise Exception('product must be on of {} {} was entered'.format(', '.join(DBTypes), kwargs.get('product')))
+    
+    conParams = {
+        'user': kwargs.get('user', None), 
+        'password': kwargs.get('password', None), 'host': kwargs.get('host', None), 
+        'port': kwargs.get('port', None), 'database': kwargs.get('database', None), 
+        'timeout': kwargs.get('timeout', None), 'product': kwargs.get('product', None), 'schema': kwargs.get('schema', None)
+        }
 
     dbConn = None
     if kwargs.get('product') in ('postgres', 'sqlite'):
-        dbConn = rssSqlDbConnection(cntlr, **kwargs)
+        dbConn = rssSqlDbConnection(cntlr, **conParams)
     elif kwargs.get('product') == 'mongodb':
         # check if required packages exists
         # first make sure that additional path entries in config file are added
@@ -153,7 +160,7 @@ def rssDBConnection(cntlr, **kwargs):
                 cntlr.showStatus(_('Install required packages or add installation path to "sys.path"'))
                 return
 
-        dbConn = rssMongoDbConnection(cntlr, **kwargs)
+        dbConn = rssMongoDbConnection(cntlr, **conParams)
 
     return dbConn
 
@@ -554,8 +561,10 @@ class rssSqlDbConnection(SqlDbConnection):
             self.addToLog(_('Error while removing formula(e) with id(s) {}:\n{}').format(str(formulaIds), str(e)), messageCode="RssDB.Error", file=self.conParams.get('database', ''), level=logging.ERROR)
         return
 
+
     def startDBReport(self, host='0.0.0.0', port=None, debug=False, asDaemon=True, fromDate=None, toDate=None, threaded=True):
         return _startDBReport(self, host, port, debug, asDaemon, fromDate, toDate, threaded)
+
 
     def checkConnection(self):
         chk = False
@@ -1262,7 +1271,15 @@ class rssSqlDbConnection(SqlDbConnection):
         return result
 
 
-    def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, assignedSic=None, dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False):
+    def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, 
+                        assignedSic=None, dateFrom=None, dateTo=None, inlineXBRL=None, 
+                        limit=100, getFiles=False, **kwargs):
+        # accommodate both list and string input
+        companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
+        tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
+        cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
+        formType = ','.join(formType) if isinstance(formType, (list, tuple, set)) else formType
+        assignedSic = ','.join([str(x) for x in assignedSic]) if isinstance(assignedSic, (list, tuple, set)) else assignedSic
         inlineFilter = {
             'yes': '1',
             'no': '0'
@@ -1345,6 +1362,84 @@ class rssSqlDbConnection(SqlDbConnection):
                             messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
         return resultDict
 
+    def searchFilers(self, companyName=None, tickerSymbol=None, cikNumber=None, industry=None, limit=100, **kwargs):
+        # accommodate both list and string input
+        companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
+        tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
+        cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
+        industry = ','.join([str(x) for x in industry]) if isinstance(industry, (list, tuple, set)) else industry
+        whereClause = OrderedDict([
+            ('companyName', ['%' + x.strip() + '%' for x in companyName.split(',')] if companyName else []),
+            ('tickerSymbol', [x.strip() for x in tickerSymbol.split(',')] if tickerSymbol else []),
+            ('cikNumber', [x.strip() for x in cikNumber.split(',')] if cikNumber else []),
+            ('industry', [x.strip() for x in industry.split(',')] if industry else []), 
+            ('limit', [limit] if limit else [100])])
+
+        whereClausePlaceHolders = ' AND '.join(filter(None, [
+            '(' + ' OR '.join(filter(None, [
+                ' OR '.join(['a."conformedName" LIKE ?' for n in whereClause['companyName']]
+                            ) if whereClause['companyName'] else None,
+                'b."tickerSymbol" IN ({})'.format(', '.join(
+                    '?' * len(whereClause['tickerSymbol']))) if whereClause['tickerSymbol'] else None,
+                'a."cikNumber" IN ({})'.format(', '.join(
+                    '?' * len(whereClause['cikNumber']))) if whereClause['cikNumber'] else None
+            ])) + ')' if any([whereClause['companyName'], whereClause['tickerSymbol'], whereClause['cikNumber']]) else None,
+            'a."industry_code" IN ({})'.format(', '.join(
+                '?' * len(whereClause['industry']))) if whereClause['industry'] else None
+        ]))
+
+        params = tuple(filter(None,([i for x in whereClause.values() for i in x])))
+
+        qry='''
+        SELECT a.*, b."tickerSymbol" 
+        FROM "filersInfo" a
+            {}
+        {} {}
+        LIMIT ?
+        '''.format('LEFT JOIN "cikTickerMapping" b on a."cikNumber" = b."cikNumber"', 'WHERE' if whereClausePlaceHolders else '', whereClausePlaceHolders)
+
+        if self.product == 'postgres':
+            paraStyle = pg8000.paramstyle
+            pg8000.paramstyle = 'qmark'
+            qry = qry.replace(' LIKE ', ' ILIKE ' )
+
+        qry_result = {}
+        self.showStatus(_('Retriving Data'))
+        try:
+            qry_result = self.execute(qry, params=params, close=False)
+        except Exception as e:
+            self.rollback()
+            if self.product == 'postgres':
+                pg8000.paramstyle = paraStyle
+            raise e
+        
+        resultDict = dict(filers=[])
+
+        _cols = [x[0] for x in self.cursor.description]
+        cols = [x.decode() if isinstance(x, bytes) else x for x in _cols]
+        filersDicts = [dict(zip(cols, x)) for x in qry_result]
+
+        # make tickers unique
+        unique_ciks = {x['cikNumber'] for x in filersDicts}
+        unique_filers_dicts = []
+        for cik in unique_ciks:
+            tickersSet = set()
+            # find all tickers
+            for t in filersDicts:
+                if t['cikNumber'] == cik:
+                    if not t['tickerSymbol'] is None:
+                        tickersSet.add(t['tickerSymbol'])
+            # get 1 filer info
+            for d in filersDicts:
+                if d['cikNumber'] == cik:
+                    d['tickerSymbol'] = '|'.join(tickersSet)
+                    unique_filers_dicts.append(d)
+                    break
+        resultDict['filers'] = unique_filers_dicts
+
+        self.addToLog(_('Retrived {} filer(s) with {} ticker symbol(s)').format(len(unique_filers_dicts), len(filersDicts)),
+                            messageCode="RssDB.Info", file=getattr(self, 'dbName', ''),  level=logging.INFO)
+        return resultDict
 
     def dumpFilersInfo(self):
         """Creates dumps filers table to a pickle file 
@@ -2115,7 +2210,15 @@ class rssMongoDbConnection:
         return result
 
 
-    def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, assignedSic=None, dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False):
+    def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, assignedSic=None, 
+                        dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False, **kwargs):
+        # accommodate both list and string input
+        companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
+        tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
+        cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
+        formType = ','.join(formType) if isinstance(formType, (list, tuple, set)) else formType
+        assignedSic = ','.join([str(x) for x in assignedSic]) if isinstance(assignedSic, (list, tuple, set)) else assignedSic
+
         inlineFilter = {
             'yes': 1,
             'no': 0
@@ -2180,6 +2283,72 @@ class rssMongoDbConnection:
 
         return resultDict
 
+
+    def searchFilers(self, companyName=None, tickerSymbol=None, cikNumber=None, industry=None, limit=100, **kwargs):
+        # accommodate both list and string input
+        companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
+        tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
+        cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
+        industry = ','.join([str(x) for x in industry]) if isinstance(industry, (list, tuple, set)) else industry
+        if not limit:
+            limit = 100
+        whereClause = OrderedDict([
+            ('conformedName', ['%' + x.strip() + '%' for x in companyName.split(',')] if companyName else []),
+            ('tickerSymbol', [x.strip() for x in tickerSymbol.split(',')] if tickerSymbol else []),
+            ('cikNumber', [x.strip() for x in cikNumber.split(',')] if cikNumber else []),
+            ('industry', [int(x.strip()) for x in industry.split(',')] if industry else []), 
+            ('limit', [limit] if limit else [100])])
+        
+        self.showStatus(_('Retriving Data'))
+    
+        t = list(self.dbConn.cikTickerMapping.find({'tickerSymbol': {'$in': whereClause['tickerSymbol']}},
+                                                {"cikNumber":1, 'tickerSymbol':1, "_id":0})) #if whereClause['tickerSymbol'] else None
+        res_t = [x['cikNumber'] for x in t] if t else []
+        res_t_dict = {x['cikNumber']: x['tickerSymbol'] for x in t} if t else {}
+
+        mongoQry = dict()
+        if any([whereClause['conformedName'], whereClause['cikNumber'], res_t]):
+            mongoQry['$or'] = []
+            if whereClause['conformedName']:
+                mongoQry['$or'].append({"conformedName": {"$regex": '^.*({}).*$'.format('|'.join(whereClause['conformedName']).replace('%', '')), '$options': 'i'}})
+            if whereClause['cikNumber'] or res_t:
+                allCik = [*whereClause['cikNumber'], *res_t] if res_t else whereClause['cikNumber'][:]
+                if allCik:
+                    mongoQry['$or'].append({'cikNumber': {'$in': allCik}})
+        if whereClause['industry']:
+            mongoQry['industry_code'] = {'$in': whereClause['industry']}
+        mongoQry_result = self.dbConn.filersInfo.find(mongoQry, {'_id':0}).limit(limit)
+        resultDict = dict(filers=[])
+        filersDicts = list(mongoQry_result)
+
+        t2 = list(self.dbConn.cikTickerMapping.find({'cikNumber': {'$in': [x['cikNumber'] for x in filersDicts]}},
+                                                {"cikNumber":1, 'tickerSymbol':1, "_id":0})) #if whereClause['tickerSymbol'] else None
+        t2_dict = {x['cikNumber']: x['tickerSymbol'] for x in t2 if not '-' in x['tickerSymbol']}
+        for d in filersDicts:
+            d['tickerSymbol'] = t2_dict.get(d['cikNumber'], None)
+        
+        # make tickers unique
+        unique_ciks = {x['cikNumber'] for x in filersDicts}
+        unique_filers_dicts = []
+        for cik in unique_ciks:
+            tickersSet = set()
+            # find all tickers
+            for t in filersDicts:
+                if t['cikNumber'] == cik:
+                    if not t['tickerSymbol'] is None:
+                        tickersSet.add(t['tickerSymbol'])
+            # get 1 filer info
+            for d in filersDicts:
+                if d['cikNumber'] == cik:
+                    d['tickerSymbol'] = '|'.join(tickersSet)
+                    unique_filers_dicts.append(d)
+                    break
+        resultDict['filers'] = unique_filers_dicts
+
+        self.addToLog(_('Retrived {} filer(s) with {} ticker symbol(s)').format(len(unique_filers_dicts), len(filersDicts)),
+                            messageCode="RssDB.Info", file=getattr(self, 'dbName', ''),  level=logging.INFO)
+
+        return resultDict
 
     def dumpFilersInfo(self):
         """Creates dumps filers table to a pickle file 

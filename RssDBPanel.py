@@ -197,10 +197,9 @@ def rssDB_showLoadedXbrl(cntlr, modelXbrl, attach, selectTopView=False, queryPar
 def rssDB_backgroundLoadXbrl(cntlr, filesource, importToDTS, selectTopView, queryParams=None, q=None):
     '''Based on CntlrWinMain.backgroundLoadXbrl'''
     startedAt = time.time()
-    if cntlr.dbConnection.searchResultsModelXbrl:
-        # use existing view
+    try:
         cntlr.dbConnection.searchResultsModelXbrl.reload('Updating View', True)
-    else:
+    except:
         try:
             action = _("loaded")
             profileStat = "load"

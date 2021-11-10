@@ -169,6 +169,22 @@ def _getSP100():
     tks_site.sort()
     return list(set(tks_site))
 
+
+def _getSP500():
+    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+    sp500_resp = request.urlopen(url)
+    tree = html.parse(sp500_resp)
+    root = tree.getroot()
+    trs = root.xpath('//table[@id="constituents"]/tbody/tr')
+    sp500Tkrs = []
+    for tr in trs:
+        sp500Tkrs.append(tuple(d.text.replace('\n', '') if d.text else (d.xpath('.//a/text()')[0] if d.xpath('.//a/text()') else None) for d in tr.findall('td')))
+
+    tks_site = [(x[0].lower().replace('.', '-'), x[-2]) for x in sp500Tkrs if x]
+    res = list(set(tks_site))
+    res.sort(key=lambda x: x[0])
+    return res
+
 # States/Countries codes data => country name, state name (US), latitude, longitude, location fix name (name used to get coordinates)
 stateCodes  = OrderedDict([
              ('AL', ('US', 'ALABAMA', 33.2588817, -86.8295337, None)),

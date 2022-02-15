@@ -98,7 +98,8 @@ def rssDBConnection(cntlr, **kwargs):
         'user': kwargs.get('user', None), 
         'password': kwargs.get('password', None), 'host': kwargs.get('host', None), 
         'port': kwargs.get('port', None), 'database': kwargs.get('database', None), 
-        'timeout': kwargs.get('timeout', None), 'product': kwargs.get('product', None), 'schema': kwargs.get('schema', None)
+        'timeout': kwargs.get('timeout', None), 'product': kwargs.get('product', None), 'schema': kwargs.get('schema', None),
+        'createSchema': kwargs.get('createSchema', None), 'createDB': kwargs.get('createDB', None),
         }
 
     dbConn = None
@@ -904,6 +905,8 @@ class rssSqlDbConnection(SqlDbConnection):
                                    )):
                     statusMsg, sep, rest = sql.strip().partition('\n')
                     self.showStatus(statusMsg[0:50])
+                    if self.product == 'postgres' and 'create function' in sql.lower():
+                        sql = sql.replace('%%', '%')
                     result = self.execute(sql, close=False, commit=False, fetch=False, action=action)
                     if TRACESQLFILE:
                         with io.open(TRACESQLFILE, "a", encoding='utf-8') as fh:
@@ -927,11 +930,12 @@ class rssSqlDbConnection(SqlDbConnection):
         if self.product == 'postgres':
             pgParamStyle = pg8000.paramstyle
             pg8000.paramstyle = 'named'
-        cur = self.cursor
+
         _tbl = dbTable
+        colTypeFunc = self.columnTypeFunctions(dbTable)
         _cols =  chkToList(updateCols, str) if action=='update' and updateCols else rssCols[_tbl]
         columns = ', '.join(['"' + x + '"' for x in _cols])
-        placeholders = ":" + ', :'.join(_cols)
+        placeholders = ":" + ', :'.join([x + colTypeFunc[x][0] if self.product=='postgres' else x for x in _cols])
         _placeholders = ('SELECT ' + placeholders,)[0] if len(_cols)== 1 else placeholders
         _action = action
         _idCol = chkToList(idCol if idCol else rssCols[_tbl][0], str)
@@ -948,6 +952,7 @@ class rssSqlDbConnection(SqlDbConnection):
         if len(_inputData) > 0:
             try:
                 self.showStatus(msg)
+                cur = self.cursor
                 cur.executemany(_sql, _inputData)
                 actionMsg = _('{} {} row(s) in {}').format(_action + ('ed' if _action=='insert' else 'd',)[0], cur.rowcount, _tbl)
                 self.showStatus(actionMsg)
@@ -1036,7 +1041,7 @@ class rssSqlDbConnection(SqlDbConnection):
         newCiksData = []
         updatedExistingCiksData = []
         if refreshAll and hasTables:
-            self.execute('Delete From "{}"'.format(rssTables[3]))
+            self.execute('Delete From "{}"'.format(rssTables[3]), fetch=False)
             
         _newCiks = []
         _newCiksList = []
@@ -1270,66 +1275,70 @@ class rssSqlDbConnection(SqlDbConnection):
 
         return result
 
-
     def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, 
                         assignedSic=None, dateFrom=None, dateTo=None, inlineXBRL=None, 
-                        limit=100, getFiles=False, **kwargs):
+                        limit=100, getFiles=False, filingIds=None, **kwargs):
         # accommodate both list and string input
-        companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
-        tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
-        cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
-        formType = ','.join(formType) if isinstance(formType, (list, tuple, set)) else formType
-        assignedSic = ','.join([str(x) for x in assignedSic]) if isinstance(assignedSic, (list, tuple, set)) else assignedSic
-        inlineFilter = {
-            'yes': '1',
-            'no': '0'
-        }
-        whereClause = OrderedDict([
-            ('companyName', ['%' + x.strip() + '%' for x in companyName.split(',')] if companyName else []),
-            ('tickerSymbol', [x.strip() for x in tickerSymbol.split(',')] if tickerSymbol else []),
-            ('cikNumber', [x.strip() for x in cikNumber.split(',')] if cikNumber else []),
-            ('formType', ['%' + x.strip() + '%' for x in formType.split(',')] if formType else []),  
-            ('assignedSic', [x.strip() for x in assignedSic.split(',')] if assignedSic else []), 
-            ('dateFrom', [dateFrom] if dateFrom else []),
-            ('dateTo', [dateTo] if dateTo else []),
-            ('inlineXBRL', [str(inlineFilter[inlineXBRL.lower()])] if inlineXBRL else []),
-            ('limit', [limit] if limit else [100])])
-
-        whereClausePlaceHolders = ' AND '.join(filter(None, [
-            '(' + ' OR '.join(filter(None, [
-                ' OR '.join(['a."companyName" LIKE ?' for n in whereClause['companyName']]
-                            ) if whereClause['companyName'] else None,
-                'b."tickerSymbol" IN ({})'.format(', '.join(
-                    '?' * len(whereClause['tickerSymbol']))) if whereClause['tickerSymbol'] else None,
-                'a."cikNumber" IN ({})'.format(', '.join(
-                    '?' * len(whereClause['cikNumber']))) if whereClause['cikNumber'] else None
-            ])) + ')' if any([whereClause['companyName'], whereClause['tickerSymbol'], whereClause['cikNumber']]) else None,
-            '(' + ' OR '.join(['a."formType" LIKE ?' for n in whereClause['formType']]
-                            ) + ')' if whereClause['formType'] else None,
-            'a."assignedSic" IN ({})'.format(', '.join(
-                '?' * len(whereClause['assignedSic']))) if whereClause['assignedSic'] else None,
-            'a."filingDate" >= ?' if whereClause['dateFrom'] else None, 
-            'a."filingDate" <= ?' if whereClause['dateTo'] else None,
-            'a."inlineXBRL" = ?' if whereClause['inlineXBRL'] else None,
-        ]))
-
-        params = tuple(filter(None,([i for x in whereClause.values() for i in x])))
-
-        qry='''
-        SELECT * 
-        FROM "filingsInfo" a
-            {}
-        {} {}
-        ORDER BY "filingId" DESC
-        LIMIT ?
-        '''.format('LEFT JOIN "cikTickerMapping" b on a."cikNumber" = b."cikNumber"' if tickerSymbol else '', 'WHERE' if whereClausePlaceHolders else '', whereClausePlaceHolders)
-
-        if self.product == 'postgres':
-            paraStyle = pg8000.paramstyle
-            pg8000.paramstyle = 'qmark'
-            qry = qry.replace(' LIKE ', ' ILIKE ' )
-
         qry_result = {}
+        params = None
+        if filingIds is None: # shortcut
+            companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
+            tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
+            cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
+            formType = ','.join(formType) if isinstance(formType, (list, tuple, set)) else formType
+            assignedSic = ','.join([str(x) for x in assignedSic]) if isinstance(assignedSic, (list, tuple, set)) else assignedSic
+            inlineFilter = {
+                'yes': '1',
+                'no': '0'
+            }
+            whereClause = OrderedDict([
+                ('companyName', ['%' + x.strip() + '%' for x in companyName.split(',')] if companyName else []),
+                ('tickerSymbol', [x.strip() for x in tickerSymbol.split(',')] if tickerSymbol else []),
+                ('cikNumber', [x.strip() for x in cikNumber.split(',')] if cikNumber else []),
+                ('formType', ['%' + x.strip() + '%' for x in formType.split(',')] if formType else []),  
+                ('assignedSic', [x.strip() for x in assignedSic.split(',')] if assignedSic else []), 
+                ('dateFrom', [dateFrom] if dateFrom else []),
+                ('dateTo', [dateTo] if dateTo else []),
+                ('inlineXBRL', [str(inlineFilter[inlineXBRL.lower()])] if inlineXBRL else []),
+                ('limit', [limit] if limit else [100])])
+
+            whereClausePlaceHolders = ' AND '.join(filter(None, [
+                '(' + ' OR '.join(filter(None, [
+                    ' OR '.join(['a."companyName" LIKE ?' for n in whereClause['companyName']]
+                                ) if whereClause['companyName'] else None,
+                    'b."tickerSymbol" IN ({})'.format(', '.join(
+                        '?' * len(whereClause['tickerSymbol']))) if whereClause['tickerSymbol'] else None,
+                    'a."cikNumber" IN ({})'.format(', '.join(
+                        '?' * len(whereClause['cikNumber']))) if whereClause['cikNumber'] else None
+                ])) + ')' if any([whereClause['companyName'], whereClause['tickerSymbol'], whereClause['cikNumber']]) else None,
+                '(' + ' OR '.join(['a."formType" LIKE ?' for n in whereClause['formType']]
+                                ) + ')' if whereClause['formType'] else None,
+                'a."assignedSic" IN ({})'.format(', '.join(
+                    '?' * len(whereClause['assignedSic']))) if whereClause['assignedSic'] else None,
+                'a."filingDate" >= ?' if whereClause['dateFrom'] else None, 
+                'a."filingDate" <= ?' if whereClause['dateTo'] else None,
+                'a."inlineXBRL" = ?' if whereClause['inlineXBRL'] else None,
+            ]))
+
+            params = tuple(filter(None,([i for x in whereClause.values() for i in x])))
+
+            qry='''
+            SELECT * 
+            FROM "filingsInfo" a
+                {}
+            {} {}
+            ORDER BY "filingId" DESC
+            LIMIT ?
+            '''.format('LEFT JOIN "cikTickerMapping" b on a."cikNumber" = b."cikNumber"' if tickerSymbol else '', 'WHERE' if whereClausePlaceHolders else '', whereClausePlaceHolders)
+
+            if self.product == 'postgres':
+                paraStyle = pg8000.paramstyle
+                pg8000.paramstyle = 'qmark'
+                qry = qry.replace(' LIKE ', ' ILIKE ' )
+        else:
+            filingIds = ','.join([str(x) for x in filingIds]) if isinstance(filingIds, (list, tuple, set)) else filingIds
+            qry = f'SELECT * FROM "filingsInfo" WHERE "filingId" in ({filingIds})'
+
         self.showStatus(_('Retriving Data'))
         try:
             qry_result = self.execute(qry, params=params, close=False)
@@ -1338,7 +1347,7 @@ class rssSqlDbConnection(SqlDbConnection):
             if self.product == 'postgres':
                 pg8000.paramstyle = paraStyle
             raise e
-        
+
         resultDict = dict(filings=[], files=[])
 
         _cols = [x[0] for x in self.cursor.description]
@@ -1349,7 +1358,9 @@ class rssSqlDbConnection(SqlDbConnection):
             filings_ids = tuple(x['filingId'] for x in resultDict['filings'])
             qry_files = 'SELECT * From "filesInfo" WHERE "filingId" IN ({})'.format(', '.join(['?']*len(filings_ids)))
             try:
-                qry_result_files = self.execute(qry_files, params= filings_ids, close=False)
+                # qry_result_files = self.execute(qry_files, params= filings_ids, close=False)
+                _qry_string = f'SELECT * From "filesInfo" WHERE "filingId" IN ({",".join([str(x) for x in filings_ids])})'
+                qry_result_files = self.execute(_qry_string, close=False)
             except Exception as e:
                 self.rollback()
                 if self.product == 'postgres':
@@ -1463,6 +1474,31 @@ class rssSqlDbConnection(SqlDbConnection):
             pickle.dump(filersInfoDict, f)
         return
 
+    def get_existing_filing_numbers(self, form_types:list):
+        '''List of filing numbers (accession numbers) of form_types existing in db
+        returns cols: 
+            filingsInfo.filingId, filingsInfo.accessionNumber, filingsInfo.formType, filingsInfo.acceptanceDatetime
+        '''
+        qry = f'''SELECT "filingId", "accessionNumber", "formType", "acceptanceDatetime" FROM "filingsInfo"
+                WHERE "duplicate"=0'''
+
+        existing_filings = None
+        if form_types is not None:
+            if isinstance(form_types, (list, tuple, set)):
+                form_types = ','.join([self.dbStr(str(x)) for x in form_types])
+            else:
+                form_types = self.dbStr(form_types)
+            qry += f' AND "formType" IN ({form_types})'
+        try:
+            existing_filings = self.execute(qry, close=False)
+            cols = [x[0].decode() if type(x[0]) is bytes else x[0] for x in self.cursor.description]
+            existing_filings = [dict(zip(cols, x)) for x in existing_filings]
+        except Exception as ex:
+            if self.product == 'postgres':
+                self.rollback()
+            raise
+        return existing_filings
+
 class rssMongoDbConnection:
     def __init__(self, cntlr, host, database, user, password, port, timeout, product, schema, createSchema=False, createDB=False):
         self.conParams = {'cntlr': None, 'user': user, 
@@ -1484,7 +1520,8 @@ class rssMongoDbConnection:
         self.dbConn = None
         if createDB:
             self.dbConn = self.mongoClient[database]
-            self.create()
+            if not database in self.mongoClient.list_database_names():
+                self.create()
         if not createDB:
             if database in self.mongoClient.list_database_names():
                 self.dbConn = self.mongoClient[database]
@@ -2211,69 +2248,74 @@ class rssMongoDbConnection:
 
 
     def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, assignedSic=None, 
-                        dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False, **kwargs):
+                        dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False, filingIds=None, **kwargs):
         # accommodate both list and string input
-        companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
-        tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
-        cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
-        formType = ','.join(formType) if isinstance(formType, (list, tuple, set)) else formType
-        assignedSic = ','.join([str(x) for x in assignedSic]) if isinstance(assignedSic, (list, tuple, set)) else assignedSic
-
-        inlineFilter = {
-            'yes': 1,
-            'no': 0
-        }
-        if not limit:
-            limit = 100
-        whereClause = OrderedDict([
-            ('companyName', ['%' + x.strip() + '%' for x in companyName.split(',')] if companyName else []),
-            ('tickerSymbol', [x.strip() for x in tickerSymbol.split(',')] if tickerSymbol else []),
-            ('cikNumber', [x.strip() for x in cikNumber.split(',')] if cikNumber else []),
-            ('formType', ['%' + x.strip() + '%' for x in formType.split(',')] if formType else []),  
-            ('assignedSic', [int(x.strip()) for x in assignedSic.split(',')] if assignedSic else []), 
-            ('dateFrom', [dateFrom] if dateFrom else []),
-            ('dateTo', [dateTo] if dateTo else []),
-            ('inlineXBRL', [str(inlineFilter[inlineXBRL.lower()])] if inlineXBRL else []),
-            ('limit', [limit] if limit else [100])])
-        
-        self.showStatus(_('Retriving Data'))
-    
-        t = list(self.dbConn.cikTickerMapping.find({'tickerSymbol': {'$in': whereClause['tickerSymbol']}},
-                                                {"cikNumber":1, 'tickerSymbol':1, "_id":0})) if whereClause['tickerSymbol'] else None
-        res_t = [x['cikNumber'] for x in t] if t else []
-        res_t_dict = {x['cikNumber']: x['tickerSymbol'] for x in t} if t else {}
-
-        mongoQry = dict()
-        if any([whereClause['companyName'], whereClause['cikNumber'], res_t]):
-            mongoQry['$or'] = []
-            if whereClause['companyName']:
-                mongoQry['$or'].append({"companyName": {"$regex": '^.*({}).*$'.format('|'.join(whereClause['companyName']).replace('%', '')), '$options': 'i'}})
-            if whereClause['cikNumber'] or res_t:
-                allCik = [*whereClause['cikNumber'], *res_t] if res_t else whereClause['cikNumber'][:]
-                if allCik:
-                    mongoQry['$or'].append({'cikNumber': {'$in': allCik}})
-        if whereClause['formType']:
-            mongoQry['formType'] = {"$regex":'^.*({}).*$'.format('|'.join(whereClause['formType']).replace('%', '')),'$options': 'i'}
-        if whereClause['assignedSic']:
-            mongoQry['assignedSic'] = {'$in': whereClause['assignedSic']}
-        if dateFrom or dateTo:
-            mongoQry['filingDate'] = {}
-            if dateFrom:
-                mongoQry['filingDate']['$gte'] = datetime.strptime(dateFrom, '%Y-%m-%d')
-            if dateTo:
-                mongoQry['filingDate']['$lte'] = datetime.strptime(dateTo, '%Y-%m-%d')
-        if inlineXBRL:
-            mongoQry['inlineXBRL'] = inlineFilter[inlineXBRL.lower()]
-
-        mongoQry_result = self.dbConn.filingsInfo.find(mongoQry, {'_id':0}, sort=[( 'filingId',  DESCENDING )]).limit(limit)
         resultDict = dict(filings=[], files=[])
-        filingsDicts = list(mongoQry_result)
-        if res_t_dict:
-            for d in filingsDicts:
-                d['tickerSymbol'] = res_t_dict.get(d['cikNumber'], None)
-        
-        resultDict['filings'] = filingsDicts
+        filingsDicts = {}
+        if filingIds is None: # shortcut
+            companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
+            tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
+            cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
+            formType = ','.join(formType) if isinstance(formType, (list, tuple, set)) else formType
+            assignedSic = ','.join([str(x) for x in assignedSic]) if isinstance(assignedSic, (list, tuple, set)) else assignedSic
 
+            inlineFilter = {
+                'yes': 1,
+                'no': 0
+            }
+            if not limit:
+                limit = 100
+            whereClause = OrderedDict([
+                ('companyName', ['%' + x.strip() + '%' for x in companyName.split(',')] if companyName else []),
+                ('tickerSymbol', [x.strip() for x in tickerSymbol.split(',')] if tickerSymbol else []),
+                ('cikNumber', [x.strip() for x in cikNumber.split(',')] if cikNumber else []),
+                ('formType', ['%' + x.strip() + '%' for x in formType.split(',')] if formType else []),  
+                ('assignedSic', [int(x.strip()) for x in assignedSic.split(',')] if assignedSic else []), 
+                ('dateFrom', [dateFrom] if dateFrom else []),
+                ('dateTo', [dateTo] if dateTo else []),
+                ('inlineXBRL', [str(inlineFilter[inlineXBRL.lower()])] if inlineXBRL else []),
+                ('limit', [limit] if limit else [100])])
+            
+            self.showStatus(_('Retriving Data'))
+        
+            t = list(self.dbConn.cikTickerMapping.find({'tickerSymbol': {'$in': whereClause['tickerSymbol']}},
+                                                    {"cikNumber":1, 'tickerSymbol':1, "_id":0})) if whereClause['tickerSymbol'] else None
+            res_t = [x['cikNumber'] for x in t] if t else []
+            res_t_dict = {x['cikNumber']: x['tickerSymbol'] for x in t} if t else {}
+
+            mongoQry = dict()
+            if any([whereClause['companyName'], whereClause['cikNumber'], res_t]):
+                mongoQry['$or'] = []
+                if whereClause['companyName']:
+                    mongoQry['$or'].append({"companyName": {"$regex": '^.*({}).*$'.format('|'.join(whereClause['companyName']).replace('%', '')), '$options': 'i'}})
+                if whereClause['cikNumber'] or res_t:
+                    allCik = [*whereClause['cikNumber'], *res_t] if res_t else whereClause['cikNumber'][:]
+                    if allCik:
+                        mongoQry['$or'].append({'cikNumber': {'$in': allCik}})
+            if whereClause['formType']:
+                mongoQry['formType'] = {"$regex":'^.*({}).*$'.format('|'.join(whereClause['formType']).replace('%', '')),'$options': 'i'}
+            if whereClause['assignedSic']:
+                mongoQry['assignedSic'] = {'$in': whereClause['assignedSic']}
+            if dateFrom or dateTo:
+                mongoQry['filingDate'] = {}
+                if dateFrom:
+                    mongoQry['filingDate']['$gte'] = datetime.strptime(dateFrom, '%Y-%m-%d')
+                if dateTo:
+                    mongoQry['filingDate']['$lte'] = datetime.strptime(dateTo, '%Y-%m-%d')
+            if inlineXBRL:
+                mongoQry['inlineXBRL'] = inlineFilter[inlineXBRL.lower()]
+
+            mongoQry_result = self.dbConn.filingsInfo.find(mongoQry, {'_id':0}, sort=[( 'filingId',  DESCENDING )]).limit(limit)
+            filingsDicts = list(mongoQry_result)
+            if res_t_dict:
+                for d in filingsDicts:
+                    d['tickerSymbol'] = res_t_dict.get(d['cikNumber'], None)
+        else:
+            filingIds = filingIds.split(',') if isinstance(filingIds, str) else filingIds
+            mongoQry_result = self.dbConn.filingsInfo.find({'filingId': {'$in':filingIds}}, {'_id':0})
+            filingsDicts = list(mongoQry_result)
+
+        resultDict['filings'] = filingsDicts
         if getFiles and filingsDicts:
             filings_ids = [x['filingId'] for x in filingsDicts]
             resultDict['files'] = list(self.dbConn.filesInfo.find({'filingId': {'$in':[x['filingId'] for x in filingsDicts]}}, {'_id':0}))
@@ -2369,6 +2411,27 @@ class rssMongoDbConnection:
         with open(fileName, 'wb') as f:
             pickle.dump(filersInfoDict, f)
         return
+
+    def get_existing_filing_numbers(self, form_types:list=None):
+        '''List of filing numbers (accession numbers) of form_types existing in db
+        returns fields: 
+            filingsInfo.filingId, filingsInfo.accessionNumber, filingsInfo.formType, filingsInfo.acceptanceDatetime
+        '''
+        existing_filings = None
+        return_fields = {"filingId":1, "accessionNumber":1, "formType":1, "acceptanceDatetime":1 ,"_id":0}
+        xfilter = {'duplicate':0}
+
+        if form_types is not None:
+            if isinstance(form_types, (list, tuple, set)):
+                form_types = [str(x) for x in form_types]
+                xfilter['formType'] = {'$in': form_types}
+            else:
+                form_types = str(form_types)
+                xfilter['formType'] = form_types
+        existing_filings = list(self.dbConn.filingsInfo.find(xfilter, return_fields))
+        return existing_filings
+
+
 
 def _makeMongoDBIndustryClassifications(cntlr, relativesFields = ['industry_id', 'industry_code', 'industry_description', 'depth'] ):
     '''Creates industry collection data based on industry table in semantic model

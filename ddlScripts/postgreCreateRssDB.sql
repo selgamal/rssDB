@@ -14,6 +14,14 @@
 -- DROP TABLE IF EXISTS industry CASCADE;
 -- DROP TABLE IF EXISTS industry_level CASCADE;
 -- DROP TABLE IF EXISTS industry_structure CASCADE;
+-- DROP TABLE IF EXISTS "formulae" CASCADE;
+-- DROP TABLE IF EXISTS "formulaeResults" CASCADE;
+-- DROP TABLE IF EXISTS "lastUpdate" CASCADE;
+-- DROP TABLE IF EXISTS "locations" CASCADE;
+-- DROP FUNCTION IF EXISTS row_count_all CASCADE;
+-- DROP VIEW IF EXISTS v_count_filings_by_feed;
+-- DROP VIEW IF EXISTS v_duplicate_filings;
+-- DROP VIEW IF EXISTS v_filingsSummary;
 
 
 CREATE TABLE IF NOT EXISTS "feedsInfo" (
@@ -158,7 +166,7 @@ CREATE TABLE IF NOT EXISTS "formulaeResults" (
 );
 
 
-CREATE OR REPLACE VIEW v_duplicate_filings
+CREATE VIEW "v_duplicate_filings"
  AS
  WITH x AS (
          SELECT "accessionNumber",
@@ -171,7 +179,7 @@ CREATE OR REPLACE VIEW v_duplicate_filings
    FROM x
   WHERE x.num > 1;
 
-CREATE OR REPLACE VIEW "v_filingsSummary"
+CREATE VIEW "v_filingsSummary"
  AS
 select "feedId", "formType", "assignedSic", "inlineXBRL", count("filingId") as "count"
 from "filingsInfo"
@@ -212,3 +220,50 @@ CREATE TABLE IF NOT EXISTS industry_structure (
     PRIMARY KEY (industry_structure_id)
 );
 
+CREATE FUNCTION row_count_all(
+	schema_name text DEFAULT NULL::text)
+    RETURNS TABLE(table_name text, row_count bigint) 
+    LANGUAGE 'plpgsql'
+
+AS $BODY$
+
+DECLARE
+ table_name text;
+BEGIN
+  IF
+    schema_name is NULL
+  THEN
+    SELECT current_schema INTO schema_name;
+  END IF;
+	FOR table_name in SELECT tablename
+	FROM pg_catalog.pg_tables
+	WHERE schemaname = schema_name
+  LOOP
+    RETURN QUERY EXECUTE format('select cast(%L as text),count(*) from %I.%I',
+       table_name, schema_name, table_name);
+  END LOOP;
+END
+$BODY$;
+
+CREATE VIEW v_count_filings_by_feed
+ AS
+ WITH fd AS (
+         SELECT "feedsInfo"."feedId",
+            "feedsInfo"."feedMonth",
+            "feedsInfo"."feedLink",
+            "feedsInfo"."lastModifiedDate"
+           FROM "feedsInfo"
+        ), counts AS (
+         SELECT "filingsInfo"."feedId",
+            count(*) AS count
+           FROM "filingsInfo"
+          GROUP BY "filingsInfo"."feedId"
+        )
+ SELECT fd."feedId",
+    fd."feedMonth",
+    fd."feedLink",
+    fd."lastModifiedDate",
+    counts.count
+   FROM fd
+     LEFT JOIN counts USING ("feedId")
+  ORDER BY fd."feedId";

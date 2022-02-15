@@ -9,6 +9,9 @@
 -- DROP TABLE IF EXISTS industry;
 -- DROP TABLE IF EXISTS industry_level;
 -- DROP TABLE IF EXISTS industry_structure;
+-- DROP VIEW IF EXISTS v_count_filings_by_feed;
+-- DROP VIEW IF EXISTS v_duplicate_filings;
+-- DROP VIEW IF EXISTS v_filingsSummary;
 
 CREATE TABLE IF NOT EXISTS feedsInfo (
     feedId INTEGER NOT NULL UNIQUE PRIMARY KEY,
@@ -204,3 +207,26 @@ CREATE TABLE IF NOT EXISTS industry_structure (
     level_name TEXT,
     PRIMARY KEY (industry_structure_id)
 );
+
+CREATE VIEW v_count_filings_by_feed
+ AS
+ WITH fd AS (
+         SELECT "feedsInfo"."feedId",
+            "feedsInfo"."feedMonth",
+            "feedsInfo"."feedLink",
+            "feedsInfo"."lastModifiedDate"
+           FROM "feedsInfo"
+        ), counts AS (
+         SELECT "filingsInfo"."feedId",
+            count(*) AS count
+           FROM "filingsInfo"
+          GROUP BY "filingsInfo"."feedId"
+        )
+ SELECT fd."feedId",
+    fd."feedMonth",
+    fd."feedLink",
+    fd."lastModifiedDate",
+    counts.count
+   FROM fd
+     LEFT JOIN counts USING ("feedId")
+  ORDER BY fd."feedId";

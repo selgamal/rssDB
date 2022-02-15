@@ -430,7 +430,7 @@ def getRssItemInfo(modelRssItem, feedId, filingId, getFiles=True, getXML=False):
     inlineAttrib = _i.xpath('.//@*[local-name()="inlineXBRL"]')
     if inlineAttrib:
         isInlineXbrl = inlineAttrib[0]
-        if isinstance(isInlineXbrl, str):        
+        if isinstance(isInlineXbrl, str):
             if 't' in isInlineXbrl.lower():
                 itemInfoDict['inlineXBRL'] = 1
             else:
@@ -464,7 +464,7 @@ def getRssItemInfo(modelRssItem, feedId, filingId, getFiles=True, getXML=False):
             itemInfoDict['assignedSic'] = 0
         else:
             itemInfoDict['assignedSic'] = int(itemInfoDict['assignedSic'])
-        
+
         itemInfoDict['assistantDirector'] = _i.xpath('.//*[local-name()="assistantDirector"]/text()')[
             0] if _i.xpath('.//*[local-name()="assistantDirector"]/text()') else None
 
@@ -483,7 +483,7 @@ def getRssItemInfo(modelRssItem, feedId, filingId, getFiles=True, getXML=False):
         filesInfo = getFilesInfo(modelRssItem, feedId, filingId)
         if len(filesInfo)>0:
             result[rssTables[2]] = filesInfo
-    
+
     if getXML:
         rssXml = OrderedDict.fromkeys(rssCols[rssTables[4]])
         rssXml['filingId'] = filingId
@@ -684,11 +684,14 @@ def _xDoAll(conn, loc=None, last=None, dateFrom=None, dateTo=None, getRssItems=T
     if updateTickers:
         cikTickerMapping = updateCikTickerMapping(conn, returnStats=True)
     updatedOn = parser.parse(datetime.today().strftime("%Y-%m-%d %H:%M:%S"))
-    conn.insertUpdateRssDB({'id': 0, 'lastUpdate': updatedOn},
-                            'lastUpdate', 'update', 'lastUpdate', 'id', True, False)
-    
+    if conn.product == 'postgres':
+        conn.execute(f'UPDATE "lastUpdate" SET "lastUpdate"=$${str(updatedOn)}$$::timestamp WHERE "id"=0', fetch=False) # quick fix for now
+    else:
+        conn.insertUpdateRssDB({'id': 0, 'lastUpdate': updatedOn},
+                                'lastUpdate', 'update', 'lastUpdate', 'id', True, False)
+
     endTime = time.perf_counter()
-    
+
     if filersInfo:
         rssFeeds['summary'][rssTables[3]] = filersInfo['summary'][rssTables[3]]
     if cikTickerMapping:
@@ -756,7 +759,7 @@ def _doAll(conn, setAutoUpdate=False, waitFor=timedelta(minutes=wait_duration), 
                                         refreshAll=refreshAll, timeOut=timeOut, retries=retries, includeLatest=includeLatest, getFiles=getFiles, 
                                         getXML=getXML, getFilers=getFilers, updateTickers=updateTickers, q=q)
                 except Exception as e:
-                    conn.cntlr.addToLog(_('Error while updating db:\n{}').format(str(e)), messageCode="RssDB.Error", file=conn.conParams['database'], level=logging.ERROR)
+                    conn.cntlr.addToLog(_('Error while updating db:\n{}\n{}').format(str(e), traceback.format_tb(sys.exc_info()[2])), messageCode="RssDB.Error", file=conn.conParams['database'], level=logging.ERROR)
             cycleTime = datetime.now()
             # capture stop signal while waiting for next update
             while cycleTime + waitFor > datetime.now():
@@ -774,7 +777,7 @@ def _doAll(conn, setAutoUpdate=False, waitFor=timedelta(minutes=wait_duration), 
                                 timeOut=timeOut, retries=retries, includeLatest=includeLatest, getFiles=getFiles, getXML=getXML, getFilers=getFilers, 
                                 updateTickers=updateTickers, q=q)
         except Exception as e:
-            conn.cntlr.addToLog(_('Error while updating db:\n{}').format(str(e)), messageCode="RssDB.Error", file=conn.conParams['database'], level=logging.ERROR)
+            conn.cntlr.addToLog(_('Error while updating db:\n{}\n{}').format(str(e), traceback.format_tb(sys.exc_info()[2])), messageCode="RssDB.Error", file=conn.conParams['database'], level=logging.ERROR)
     return results
 
 def _makeRssFeedLikeXml(conn, dbFilings_dicts, dbFiles_dicts, saveAs=None, returnRssItems=False, showcount=True):
@@ -915,6 +918,15 @@ def _makeRssFeedLikeXml(conn, dbFilings_dicts, dbFiles_dicts, saveAs=None, retur
         rssItems = modelXbrl.modelDocument.rssItems
         for rssIt in rssItems:
             rssIt.filingId = rssIt.find('filingId').text
+            download_url = rssIt.enclosureUrl
+            if not download_url:
+                url = getattr(rssIt.find('link'), 'text', None)
+                if url is not None and url.endswith('index.htm'):
+                    _url = url[:-9] + 'xbrl.zip'
+                    download_url = c.webCache.getfilename(_url)
+                if download_url is None:
+                    download_url = rssIt.zippedUrl
+            rssIt.download_url = download_url
     return fpath, rssItems
 
 def runRenderEdgar(mainCntlr, rssItems=None, saveToFolder=None, pluginsDirs=None):

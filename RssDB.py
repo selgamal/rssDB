@@ -1281,7 +1281,7 @@ class rssSqlDbConnection(SqlDbConnection):
         # accommodate both list and string input
         qry_result = {}
         params = None
-        if filingIds is None: # shortcut
+        if not filingIds: # shortcut
             companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
             tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
             cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
@@ -1331,16 +1331,16 @@ class rssSqlDbConnection(SqlDbConnection):
             LIMIT ?
             '''.format('LEFT JOIN "cikTickerMapping" b on a."cikNumber" = b."cikNumber"' if tickerSymbol else '', 'WHERE' if whereClausePlaceHolders else '', whereClausePlaceHolders)
 
-            if self.product == 'postgres':
-                paraStyle = pg8000.paramstyle
-                pg8000.paramstyle = 'qmark'
-                qry = qry.replace(' LIKE ', ' ILIKE ' )
         else:
             filingIds = ','.join([str(x) for x in filingIds]) if isinstance(filingIds, (list, tuple, set)) else filingIds
             qry = f'SELECT * FROM "filingsInfo" WHERE "filingId" in ({filingIds})'
 
         self.showStatus(_('Retriving Data'))
         try:
+            if self.product == 'postgres':
+                paraStyle = pg8000.paramstyle
+                pg8000.paramstyle = 'qmark'
+                qry = qry.replace(' LIKE ', ' ILIKE ' )
             qry_result = self.execute(qry, params=params, close=False)
         except Exception as e:
             self.rollback()
@@ -2252,7 +2252,7 @@ class rssMongoDbConnection:
         # accommodate both list and string input
         resultDict = dict(filings=[], files=[])
         filingsDicts = {}
-        if filingIds is None: # shortcut
+        if not filingIds: # shortcut
             companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
             tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
             cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber

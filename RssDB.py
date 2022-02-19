@@ -1277,11 +1277,11 @@ class rssSqlDbConnection(SqlDbConnection):
 
     def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, 
                         assignedSic=None, dateFrom=None, dateTo=None, inlineXBRL=None, 
-                        limit=100, getFiles=False, filingIds=None, **kwargs):
+                        limit=100, getFiles=False, filingIds=None, accessionNumbers=None, **kwargs):
         # accommodate both list and string input
         qry_result = {}
         params = None
-        if not filingIds: # shortcut
+        if not filingIds and not accessionNumbers: # shortcut
             companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
             tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
             cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
@@ -1331,9 +1331,16 @@ class rssSqlDbConnection(SqlDbConnection):
             LIMIT ?
             '''.format('LEFT JOIN "cikTickerMapping" b on a."cikNumber" = b."cikNumber"' if tickerSymbol else '', 'WHERE' if whereClausePlaceHolders else '', whereClausePlaceHolders)
 
-        else:
+        elif accessionNumbers:
+            if isinstance(accessionNumbers, str):
+                accessionNumbers = [x.strip() for x in accessionNumbers.split(',')]
+            accessionNumbers = ','.join(["'" + str(x) + "'" for x in accessionNumbers])
+            qry = f'SELECT * FROM "filingsInfo" WHERE "accessionNumber" in ({accessionNumbers})'
+            print(qry)
+        elif filingIds:
             filingIds = ','.join([str(x) for x in filingIds]) if isinstance(filingIds, (list, tuple, set)) else filingIds
             qry = f'SELECT * FROM "filingsInfo" WHERE "filingId" in ({filingIds})'
+            print(qry)
 
         self.showStatus(_('Retriving Data'))
         try:
@@ -2248,11 +2255,11 @@ class rssMongoDbConnection:
 
 
     def searchFilings(self, companyName=None, tickerSymbol=None, cikNumber=None, formType=None, assignedSic=None, 
-                        dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False, filingIds=None, **kwargs):
+                        dateFrom=None, dateTo=None, inlineXBRL=None, limit=100, getFiles=False, filingIds=None, accessionNumbers=None, **kwargs):
         # accommodate both list and string input
         resultDict = dict(filings=[], files=[])
         filingsDicts = {}
-        if not filingIds: # shortcut
+        if not filingIds and not accessionNumbers: # shortcuts
             companyName = ','.join(companyName) if isinstance(companyName, (list, tuple, set)) else companyName
             tickerSymbol = ','.join(tickerSymbol) if isinstance(tickerSymbol, (list, tuple, set)) else tickerSymbol
             cikNumber = ','.join(cikNumber) if isinstance(cikNumber, (list, tuple, set)) else cikNumber
@@ -2310,7 +2317,11 @@ class rssMongoDbConnection:
             if res_t_dict:
                 for d in filingsDicts:
                     d['tickerSymbol'] = res_t_dict.get(d['cikNumber'], None)
-        else:
+        elif accessionNumbers:
+            accessionNumbers = accessionNumbers.split(',') if isinstance(accessionNumbers, str) else accessionNumbers
+            mongoQry_result = self.dbConn.filingsInfo.find({'filingId': {'$in':accessionNumbers}}, {'_id':0})
+            filingsDicts = list(mongoQry_result)
+        elif filingIds:
             filingIds = filingIds.split(',') if isinstance(filingIds, str) else filingIds
             mongoQry_result = self.dbConn.filingsInfo.find({'filingId': {'$in':filingIds}}, {'_id':0})
             filingsDicts = list(mongoQry_result)

@@ -197,7 +197,7 @@ def updateCikTickerMapping(conn, createTable=False, returnStats=False):
             data = [{'tickerSymbol':x[0], 'cikNumber': x[1].zfill(10)} for x in lines if x[0]]
             _stat = conn.insertUpdateRssDB(data, "cikTickerMapping", returnStat=True)
             if conn.product in ['sqlite', 'postgres']:
-                conn.commit()            
+                conn.commit()
         else:
             conn.addToLog('Could not get data, {} returned code {}'.format(url, resp.code), messageCode="RssDB.Info", file=conn.conParams.get('database',''),  level=logging.INFO)
     totalTime = round(time.perf_counter() - startTime, 3)
@@ -687,8 +687,7 @@ def _xDoAll(conn, loc=None, last=None, dateFrom=None, dateTo=None, getRssItems=T
     if conn.product == 'postgres':
         conn.execute(f'UPDATE "lastUpdate" SET "lastUpdate"=$${str(updatedOn)}$$::timestamp WHERE "id"=0', fetch=False) # quick fix for now
     else:
-        conn.insertUpdateRssDB({'id': 0, 'lastUpdate': updatedOn},
-                                'lastUpdate', 'update', 'lastUpdate', 'id', True, False)
+        conn.insertUpdateRssDB({'id': 0, 'lastUpdate': updatedOn}, 'lastUpdate', 'update', 'lastUpdate', 'id', True, False)
 
     endTime = time.perf_counter()
 

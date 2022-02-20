@@ -5,6 +5,8 @@ implemented database products:
     - MongoDB
 """
 import sys, os, re, time, glob, io, json, gettext, gc, tempfile, logging, calendar, concurrent.futures, threading, traceback, pickle
+from math import isnan, isinf
+from decimal import Decimal
 from tkinter.filedialog import SaveAs
 from concurrent.futures import as_completed
 from collections import OrderedDict
@@ -443,6 +445,271 @@ class rssSqlDbConnection(SqlDbConnection):
         res = [dict(zip(cols, x) )for x in qry]
         return res
 
+    def dbTableNameStr(self, tableName):
+        if self.product == "postgres":
+            return '"' + tableName + '"'
+        else:
+            return tableName
+
+    def _getTable(self, table, idCol, newCols=None, matchCols=None, data=None, commit=False, 
+                 comparisonOperator='=', checkIfExisting=False, insertIfNotMatched=True, 
+                 returnMatches=True, returnExistenceStatus=False):
+        '''Modified to accommodate camel case table/col name + only keeps pg and sqlite'''
+        # generate SQL
+        # note: comparison by = will never match NULL fields
+        # use 'IS NOT DISTINCT FROM' to match nulls, but this is not indexed and verrrrry slooooow
+        if not data or not newCols or not matchCols:
+            # nothing can be done, just return
+            return () # place breakpoint here to debug
+        isPostgres = self.product == "postgres"
+        isSQLite = self.product == "sqlite"
+        newCols = [newCol.lower() if isSQLite else newCol for newCol in newCols]
+        matchCols = [matchCol.lower() if isSQLite else matchCol for matchCol in matchCols]
+        returningCols = []
+        if idCol: # idCol is the first returned column if present
+            returningCols.append(idCol)
+        for matchCol in matchCols:
+            if matchCol not in returningCols: # allow idCol to be specified or default assigned
+                returningCols.append(matchCol)
+        colTypeFunctions = self.columnTypeFunctions(table)
+        colDeclarations = self.tableColDeclaration.get(table)
+        try:
+            colTypeCast = tuple(colTypeFunctions[colName][0] for colName in newCols)
+            colTypeFunction = [colTypeFunctions[colName][1] for colName in returningCols]
+            if returnExistenceStatus:
+                colTypeFunction.append(self.pyBoolFromDbBool) # existence is a boolean
+        except KeyError as err:
+            raise XPDBException("xpgDB:MissingColumnDefinition",
+                                _("Table %(table)s column definition missing: %(missingColumnName)s"),
+                                table=table, missingColumnName=str(err)) 
+        rowValues = []
+        rowLongValues = []  # contains None if no parameters, else {} parameter dict
+        longColValues = []
+        for row in data:
+            colValues = []
+            for col in row:
+                if isinstance(col, bool):
+                    if isSQLite:
+                        colValues.append('1' if col else '0')
+                    else:
+                        colValues.append('TRUE' if col else 'FALSE')
+                elif isinstance(col, int):
+                    colValues.append(str(col))
+                elif isinstance(col, float):
+                    if _ISFINITE(col):
+                        colValues.append(str(col))
+                    else:  # no NaN, INF, in SQL implementations (Postgres has it but not IEEE implementation)
+                        colValues.append('NULL')
+                elif isinstance(col, Decimal):
+                    if col.is_finite():
+                        colValues.append(str(col))
+                    else:  # no NaN, INF, in SQL implementations (Postgres has it but not IEEE implementation)
+                        colValues.append('NULL')
+                elif isinstance(col, datetime) and isSQLite:
+                    colValues.append("'{:04}-{:02}-{:02} {:02}:{:02}:{:02}'".format(col.year, col.month, col.day, col.hour, col.minute, col.second))
+                elif isinstance(col, datetime) and isSQLite:
+                    colValues.append("'{:04}-{:02}-{:02}'".format(col.year, col.month, col.day))
+                elif col is None:
+                    colValues.append('NULL')
+                elif isinstance(col, bytes) and isPostgres:
+                    hexvals = "".join([hex(x)[2:] for x in col])
+                    #get the hex values
+                    hexvals = [hex(x)[2:] for x in col]
+                    #fix up single digit values
+                    for i in range(len(hexvals)):
+                        if len(hexvals[i]) == 1:
+                            hexvals[i] = "0" + hexvals[i]
+
+                    colValues.append(r"E'\\x" + "".join(hexvals) + "'")
+                    #colValues.append(r"E'\\x" + col.decode() + "'" )
+                else:
+                    colValues.append(self.dbStr(col))
+            if not rowValues and isPostgres:  # first row
+                for i, cast in enumerate(colTypeCast):
+                    if cast:
+                        colValues[i] = colValues[i] + cast
+            rowColValues = ", ".join(colValues)
+            rowValues.append("(" + rowColValues + ")")
+            if longColValues:
+                rowLongValues.append(longColValues)
+                longColValues = []
+            else:
+                rowLongValues.append(None)
+        values = ", \n".join(rowValues)
+
+        _table = self.dbTableNameStr(table)
+        _inputTableName = self.tempInputTableName
+        if self.product == "postgres":
+            newCols = [self.dbTableNameStr(c) for c in newCols]
+            returningCols = [self.dbTableNameStr(c) for c in returningCols]
+            # insert new rows, return id and cols of new and existing rows
+            # use IS NOT DISTINCT FROM instead of = to compare NULL usefully
+            sql = [(('''
+                    WITH row_values (%(newCols)s) AS (
+                    VALUES %(values)s
+                    )''' + (''', insertions AS (
+                    INSERT INTO %(table)s (%(newCols)s)
+                    SELECT %(newCols)s
+                    FROM row_values v''' + ('''
+                    WHERE NOT EXISTS (SELECT 1 
+                                        FROM %(table)s x 
+                                        WHERE %(match)s)''' if checkIfExisting else '') + '''
+                    RETURNING %(returningCols)s
+                    ) ''' if insertIfNotMatched else '') + '''
+                    (''' + (('''
+                    SELECT %(x_returningCols)s %(statusIfExisting)s
+                    FROM %(table)s x JOIN row_values v ON (%(match)s) ''' if checkIfExisting else '') + ('''
+                    ) UNION ( ''' if (checkIfExisting and insertIfNotMatched) else '') + ('''
+                    SELECT %(returningCols)s %(statusIfInserted)s
+                    FROM insertions''' if insertIfNotMatched else '')) + '''
+                    );''') %        {"table": _table,
+                                    "idCol": idCol,
+                                    "newCols": ', '.join(newCols),
+                                    "returningCols": ', '.join(returningCols),
+                                    "x_returningCols": ', '.join('x.{0}'.format(c) for c in returningCols),
+                                    "match": ' AND '.join('x.{0} {1} v.{0}'.format(col, comparisonOperator) 
+                                                        for col in matchCols),
+                                    "values": values,
+                                    "statusIfInserted": ", FALSE" if returnExistenceStatus else "",
+                                    "statusIfExisting": ", TRUE" if returnExistenceStatus else ""
+                                    }, None, True)]
+        elif self.product == "sqlite":
+            sql = [("CREATE TEMP TABLE %(inputTable)s ( %(inputCols)s );" %
+                        {"inputTable": _inputTableName,
+                         "inputCols": ', '.join('{0} {1}'.format(newCol, colDeclarations[newCol])
+                                                for newCol in newCols)}, None, False)]
+            # break values insertion into 1000's each
+            def insertSQLiteRows(i, j, params):
+                sql.append(("INSERT INTO %(inputTable)s ( %(newCols)s ) VALUES %(values)s;" %
+                        {"inputTable": _inputTableName,
+                         "newCols": ', '.join(newCols),
+                         "values": ", ".join(rowValues[i:j])}, params, False))
+            iMax = len(rowValues)
+            i = 0
+            while (i < iMax):
+                for j in range(i, min(i+500, iMax)):
+                    if rowLongValues[j] is not None:
+                        if j > i:
+                            insertSQLiteRows(i, j, None)
+                        insertSQLiteRows(j, j+1, rowLongValues[j])
+                        i = j + 1
+                        break
+                if i < j+1 and i < iMax:
+                    insertSQLiteRows(i, j+1, None)
+                    i = j+1
+            if insertIfNotMatched:
+                if checkIfExisting:
+                    _where = ('WHERE NOT EXISTS (SELECT 1 FROM %(table)s x WHERE %(match)s)' %
+                              {"table": _table,
+                               "match": ' AND '.join('x.{0} {1} i.{0}'.format(col, comparisonOperator) 
+                                                     for col in matchCols)})
+                else:
+                    _where = ""
+                sql.append( ("INSERT INTO %(table)s ( %(newCols)s ) SELECT %(newCols)s FROM %(inputTable)s i %(where)s;" %
+                                {"inputTable": _inputTableName,
+                                 "table": _table,
+                                 "newCols": ', '.join(newCols),
+                                 "where": _where}, None, False) )
+            if returnMatches or returnExistenceStatus:
+                sql.append(# don't know how to get status if existing
+                       ("SELECT %(returningCols)s %(statusIfExisting)s from %(inputTable)s JOIN %(table)s ON ( %(match)s );" %
+                            {"inputTable": _inputTableName,
+                             "table": _table,
+                             "newCols": ', '.join(newCols),
+                             "match": ' AND '.join('{0}.{2} = {1}.{2}'.format(_table,_inputTableName,col) 
+                                        for col in matchCols),
+                             "statusIfExisting": ", 0" if returnExistenceStatus else "",
+                             "returningCols": ', '.join('{0}.{1}'.format(_table,col)
+                                                        for col in returningCols)}, None, True))
+            sql.append(("DROP TABLE %(inputTable)s;" %
+                         {"inputTable": _inputTableName}, None, False))
+            if insertIfNotMatched and self.syncSequences:
+                sql.append( ("update sqlite_sequence "
+                             "set seq = (select seq from sqlite_sequence where name = '%(table)s') " 
+                             "where name != '%(table)s';" % 
+                              {"table": _table}, None, False) )
+        tableRows = []
+        for sqlStmt, params, fetch in sql:
+            result = self.execute(sqlStmt,commit=commit, close=False, fetch=fetch, params=params)
+            if fetch and result:
+                tableRows.extend(result)
+        return tuple(tuple(None if colValue == "NULL" or colValue is None else
+                           colTypeFunction[i](colValue)  # convert to int, datetime, etc
+                           for i, colValue in enumerate(row))
+                     for row in tableRows)
+
+    def _updateTable(self, table, cols=None, data=None, commit=False):
+        '''Modified to accommodate camel case table/col name + only keeps pg and sqlite'''
+        # generate SQL
+        # note: comparison by = will never match NULL fields
+        # use 'IS NOT DISTINCT FROM' to match nulls, but this is not indexed and verrrrry slooooow
+        if not cols or not data:
+            # nothing can be done, just return
+            return () # place breakpoint here to debug
+        isSQLite = self.product == "sqlite"
+        idCol = cols[0]
+        colTypeFunctions = self.columnTypeFunctions(table)
+        colDeclarations = self.tableColDeclaration.get(table)
+        try:
+            colTypeCast = tuple(colTypeFunctions[colName.lower() if isSQLite else colName][0] for colName in cols)
+        except KeyError as err:
+            raise XPDBException("xpgDB:MissingColumnDefinition",
+                                _("Table %(table)s column definition missing: %(missingColumnName)s"),
+                                table=table, missingColumnName=str(err)) 
+        rowValues = []
+        for row in data:
+            colValues = []
+            for col in row:
+                if isinstance(col, bool):
+                    colValues.append('TRUE' if col else 'FALSE')
+                elif isinstance(col, (int,float)):
+                    colValues.append(str(col))
+                elif col is None:
+                    colValues.append('NULL')
+                else:
+                    colValues.append(self.dbStr(col))
+            if not rowValues and self.product == "postgres":  # first row
+                for i, cast in enumerate(colTypeCast):
+                    if cast:
+                        colValues[i] = colValues[i] + cast
+            rowColValues = ", ".join(colValues)
+            if isSQLite:
+                rowValues.append(colValues)
+            else:
+                rowValues.append("(" + rowColValues + ")")
+
+        if not isSQLite:
+            values = ", \n".join(rowValues)
+
+        _table = self.dbTableNameStr(table)
+        _inputTableName = self.tempInputTableName
+        if self.product == "postgres":
+            cols = [self.dbTableNameStr(c) for c in cols]
+            idCol = self.dbTableNameStr(idCol)
+            # insert new rows, return id and cols of new and existing rows
+            # use IS NOT DISTINCT FROM instead of = to compare NULL usefully
+            sql = [('''
+                    WITH input (%(valCols)s) AS ( VALUES %(values)s ) 
+                    UPDATE %(table)s t SET %(settings)s 
+                    FROM input i WHERE i.%(idCol)s = t.%(idCol)s
+                    ;''') %         {"table": _table,
+                                    "idCol": idCol,
+                                    "valCols": ', '.join(col for col in cols),
+                                    "settings": ', '.join('{0} = i.{0}'.format(cols[i])
+                                                        for i, col in enumerate(cols)
+                                                        if i > 0),
+                                    "values": values}]
+        elif self.product == "sqlite":
+            sql = ["UPDATE %(table)s SET %(settings)s WHERE %(idCol)s = %(idVal)s;" % 
+                            {"table": _table,
+                             "idCol": idCol,
+                             "idVal": rowValue[0],
+                             "settings": ', '.join('{0} = {1}'.format(col,rowValue[i])
+                                                   for i, col in enumerate(cols)
+                                                   if i > 0)}
+                   for rowValue in rowValues]
+        for sqlStmt in sql:
+            self.execute(sqlStmt,commit=commit, fetch=False, close=False)
 
     def addFormulaToDb(self, fileName=None, formulaId=None, description=None, formulaLinkBaseString=None, replaceExistingFormula=False, returnData=True):
         '''Inserts a new or updates existing formula in the database
@@ -550,7 +817,6 @@ class rssSqlDbConnection(SqlDbConnection):
             res = formulaData
         return res
 
-
     def removeFormulaFromDb(self, formulaIds):
         try:
             placeholders = ', '.join(['?'] * len(formulaIds))
@@ -562,10 +828,8 @@ class rssSqlDbConnection(SqlDbConnection):
             self.addToLog(_('Error while removing formula(e) with id(s) {}:\n{}').format(str(formulaIds), str(e)), messageCode="RssDB.Error", file=self.conParams.get('database', ''), level=logging.ERROR)
         return
 
-
     def startDBReport(self, host='0.0.0.0', port=None, debug=False, asDaemon=True, fromDate=None, toDate=None, threaded=True):
         return _startDBReport(self, host, port, debug, asDaemon, fromDate, toDate, threaded)
-
 
     def checkConnection(self):
         chk = False
@@ -581,7 +845,6 @@ class rssSqlDbConnection(SqlDbConnection):
         except Exception as e:
             pass
         return chk
-
 
     def getDbStats(self):
         result = {'textResult': OrderedDict(), 'dictResult':OrderedDict()}
@@ -659,7 +922,6 @@ class rssSqlDbConnection(SqlDbConnection):
             result['textResult'] = {'noConnection': 'Could not connect to database'}
 
         return result
-        
 
     def getReportData(self, fromDate=None, toDate=None):
         '''Get summaries used in db report'''
@@ -674,7 +936,7 @@ class rssSqlDbConnection(SqlDbConnection):
                     self.cntlr.addToLog(_('{} Date is not in the correct fromat, date should be in the format yyyy-mm-dd').format(k),
                                         messageCode="RssDB.Error", file=self.conParams.get('database', ''), level=logging.ERROR)
                     return
-        
+
         if (fromDate and toDate) and (datetime.strptime(toDate, '%Y-%m-%d') <= datetime.strptime(fromDate, '%Y-%m-%d')):
             self.cntlr.addToLog(_('To Date must be later than From date'),
                                     messageCode="RssDB.Error", file=self.conParams.get('database', ''), level=logging.ERROR)
@@ -723,7 +985,6 @@ class rssSqlDbConnection(SqlDbConnection):
 
         return dbStats, filingsDataDict, res_industry, locationsDict
 
-
     def showStatus(self, msg, clearAfter=2000, end='\n'):
         if self.cntlr is not None:
             if 'end' in self.cntlr.showStatus.__code__.co_varnames:
@@ -734,12 +995,10 @@ class rssSqlDbConnection(SqlDbConnection):
                 self.cntlr.showStatus(msg, clearAfter)
         return
 
-
     def addToLog(self, msg, **kwargs):
         if self.cntlr is not None:
             self.cntlr.addToLog(msg, **kwargs)
         return
-
 
     def changeSchema(self, schema, createIfNotExist=True):
         if self.product in ['postgres']:
@@ -755,7 +1014,6 @@ class rssSqlDbConnection(SqlDbConnection):
             self.execute('SET search_path = "{}";'.format(schema), fetch=False)
             self.showStatus(_('Path set to {}').format(schema))
         return
-            
 
     def tablesInDB(self):
         return set(tableRow[0]
@@ -766,7 +1024,6 @@ class rssSqlDbConnection(SqlDbConnection):
                                  "orcl": "SELECT table_name FROM user_tables",
                                  "sqlite": "SELECT name FROM sqlite_master WHERE type='table';"
                                  }[self.product]))
-
 
     def verifyTables(self, createTables=True, dropPriorTables=False, populateFilersInfo=False):
         gettext.install('arelle')
@@ -787,8 +1044,7 @@ class rssSqlDbConnection(SqlDbConnection):
         elif not missingTables:
             result = True
         return result
-   
-    
+
     def create(self, ddlFiles, dropPriorTables=True, populateFilersInfo=True): # ddl Files may be a sequence (or not) of file names, glob wildcards ok, relative ok
         gettext.install('arelle')
         if dropPriorTables:
@@ -796,7 +1052,7 @@ class rssSqlDbConnection(SqlDbConnection):
             startedAt = time.time()
             self.showStatus(_("Dropping prior tables"))
             for table in self.tablesInDB():
-                result = self.execute('DROP TABLE IF EXISTS %s' % self.dbTableName(table),
+                result = self.execute('DROP TABLE IF EXISTS %s' % table,
                                       close=False, commit=False, fetch=False, action="dropping table")
             self.showStatus(_("Dropping prior sequences"))
             for sequence in self.sequencesInDB():
@@ -923,52 +1179,42 @@ class rssSqlDbConnection(SqlDbConnection):
         self.closeCursor()
         return
 
-
     def insertUpdateRssDB(self, inputData, dbTable, action='insert', updateCols=None, idCol=None, commit=False, returnStat=False):
-        '''action either `insert` or `update` '''
+        '''action either `insert` or `update` update to be based on SqlDBConnection.getTable/updateTable'''
+        if action not in ('insert', 'update'):
+            err_msg = _('Unknown action -> {}'.format(action))
+            self.addToLog(msg, messageCode="RssDB.Error", file=self.conParams.get('database', ''),  level=logging.ERROR)
+            raise Exception(err_msg)
         self.verifyTables(createTables=True)
-        if self.product == 'postgres':
-            pgParamStyle = pg8000.paramstyle
-            pg8000.paramstyle = 'named'
-
         _tbl = dbTable
-        colTypeFunc = self.columnTypeFunctions(dbTable)
         _cols =  chkToList(updateCols, str) if action=='update' and updateCols else rssCols[_tbl]
-        columns = ', '.join(['"' + x + '"' for x in _cols])
-        placeholders = ":" + ', :'.join([x + colTypeFunc[x][0] if self.product=='postgres' else x for x in _cols])
-        _placeholders = ('SELECT ' + placeholders,)[0] if len(_cols)== 1 else placeholders
+        if action == 'update' and idCol and idCol not in _cols:
+            _cols.insert(0, idCol)
         _action = action
-        _idCol = chkToList(idCol if idCol else rssCols[_tbl][0], str)
-        updateKeys = ' AND '.join(['"{0}"=:{0}'.format(col) for col in _idCol])
-
-        _sql = {"insert": 'INSERT INTO "{}" ({}) VALUES ({})'.format(_tbl, columns, placeholders),
-                    "update": 'UPDATE "{}" SET ({}) = ({}) WHERE {}'.format(_tbl, columns, _placeholders, updateKeys)
-                    }[_action]
         msg = {'update':_("Updating {}"), 'insert': _('Inserting into {}')}[_action].format(_tbl)
         startInsertTime = time.perf_counter()
         _inputData = inputData if isinstance(inputData, list) else [inputData]
         actionMsg = ''
-        _stats = None
-        if len(_inputData) > 0:
+        row_count = None
+        action_data = tuple(tuple(x[y] for y in _cols) for x in _inputData)
+        if len(action_data) > 0:
             try:
-                self.showStatus(msg)
-                cur = self.cursor
-                cur.executemany(_sql, _inputData)
-                actionMsg = _('{} {} row(s) in {}').format(_action + ('ed' if _action=='insert' else 'd',)[0], cur.rowcount, _tbl)
-                self.showStatus(actionMsg)
+                if _action == 'insert':
+                    _ret_tbl = self._getTable(dbTable, None, tuple(_cols), (rssCols[_tbl][0],), action_data, returnMatches=False, commit=commit)
+                    row_count = len(action_data)
+                elif _action == 'update':
+                    self._updateTable(dbTable, tuple(_cols), action_data, commit=commit)
+                    row_count = len(action_data)
             except Exception as e:
                 self.rollback()
                 raise e
-        if commit:
-            self.commit()
-        if self.product == 'postgres':
-            pg8000.paramstyle = pgParamStyle
-        self.addToLog(_("Finished {} in {} secs").format(msg,
-                round(time.perf_counter() - startInsertTime, 3)),
-                messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
+            actionMsg = _('{} {} row(s) in {}').format(_action + ('ed' if _action=='insert' else 'd',)[0], row_count, _tbl)
+        self.showStatus(actionMsg)
+        self.addToLog(_("Finished {} in {} secs").format(msg, round(time.perf_counter() - startInsertTime, 3)),
+                            messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
         result = None
         if returnStat:
-            result = {action: cur.rowcount}
+            result = {action: row_count}
         return result
 
 

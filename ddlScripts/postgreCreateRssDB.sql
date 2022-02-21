@@ -34,10 +34,10 @@ CREATE TABLE IF NOT EXISTS "feedsInfo" (
     language TEXT,
     "pubDate" TIMESTAMP WITH TIME ZONE,
     "lastBuildDate" TIMESTAMP WITH TIME ZONE,
-    -- "pubDate_sort" TIMESTAMP WITH TIME ZONE,
-    -- "lastBuildDate_sort" TIMESTAMP WITH TIME ZONE,
 	"lastModifiedDate" TIMESTAMP WITHOUT TIME ZONE
 );
+
+CREATE INDEX "feedsInfo_idx02" ON "feedsInfo" USING btree ("lastModifiedDate"); 
 
 CREATE TABLE IF NOT EXISTS "filingsInfo" (
     "filingId" BIGINT NOT NULL UNIQUE PRIMARY KEY,
@@ -68,6 +68,14 @@ CREATE TABLE IF NOT EXISTS "filingsInfo" (
             ON DELETE CASCADE
 );
 
+CREATE INDEX "filingsInfo_idx02" ON "filingsInfo" USING btree ("accessionNumber"); 
+CREATE INDEX "filingsInfo_idx03" ON "filingsInfo" USING btree ("formType"); 
+CREATE INDEX "filingsInfo_idx04" ON "filingsInfo" USING btree ("assignedSic"); 
+CREATE INDEX "filingsInfo_idx05" ON "filingsInfo" USING btree ("filingDate"); 
+CREATE INDEX "filingsInfo_idx06" ON "filingsInfo" USING btree ("acceptanceDatetime"); 
+CREATE INDEX "filingsInfo_idx07" ON "filingsInfo" USING btree ("duplicate"); 
+CREATE INDEX "filingsInfo_idx08" ON "filingsInfo" USING btree ("inlineXBRL"); 
+
 CREATE TABLE IF NOT EXISTS "filesInfo" (
     "fileId" BIGINT NOT NULL UNIQUE PRIMARY KEY,
     "filingId" BIGINT,
@@ -88,7 +96,9 @@ CREATE TABLE IF NOT EXISTS "filesInfo" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "filesInfo_filingID_indx" ON "filesInfo" USING btree ("filingId");
+CREATE INDEX "filesInfo_idx02" ON "filesInfo" USING btree ("filingId");
+CREATE INDEX "filesInfo_idx03" ON "filesInfo" USING btree ("duplicate");
+CREATE INDEX "filesInfo_idx04" ON "filesInfo" USING btree ("type_tag");
 
 CREATE TABLE IF NOT EXISTS "rssItems" (
 	"filingId" BIGINT NOT NULL UNIQUE PRIMARY KEY,
@@ -115,10 +125,14 @@ CREATE TABLE IF NOT EXISTS "filersInfo" (
     "country" TEXT
 );
 
+CREATE INDEX "filersInfo_idx02" ON "filersInfo" USING btree ("cikNumber");
+CREATE INDEX "filersInfo_idx03" ON "filersInfo" USING btree ("industry_code");
+
 CREATE TABLE IF NOT EXISTS "cikTickerMapping" (
     "cikNumber" TEXT,
     "tickerSymbol" TEXT
 );
+CREATE INDEX "cikTickerMapping_idx01" ON "cikTickerMapping" USING btree ("cikNumber");
 
 CREATE TABLE IF NOT EXISTS "locations" (
     "code" TEXT NOT NULL UNIQUE PRIMARY KEY,

@@ -1287,6 +1287,10 @@ class rssSqlDbConnection(SqlDbConnection):
         newCiksData = []
         updatedExistingCiksData = []
         if refreshAll and hasTables:
+            # back up existing filersInfo first just in case!
+            self.addToLog(_('Updating filersInfo dump file before refreshing all filers\' information'), 
+                messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
+            self.dumpFilersInfo()
             self.execute('Delete From "{}"'.format(rssTables[3]), fetch=False)
             
         _newCiks = []
@@ -1295,7 +1299,7 @@ class rssSqlDbConnection(SqlDbConnection):
         if hasTables:
             self.showStatus(_('Checking for new CIKs'))
             _newCiks = self.execute(sql_new, fetch=True)
-        # patch retrive and insert ciks        
+        # patch retrive and insert NEW ciks        
         if len(_newCiks)>0:
             _newCiks_patches = [_newCiks[i:i + 100] for i in range(0, len(_newCiks), 100)]
             indx = 1
@@ -1316,6 +1320,7 @@ class rssSqlDbConnection(SqlDbConnection):
                             self.rollback()
                             raise e
         allUpdatedExistingCiksData = 0
+        # Try to detect changes in existing ciks
         if updateExisting and hasTables:
             self.showStatus(_('Checking for CIKs with changes'))
             _existingCiks = self.execute(sql_update, fetch=True, close=False)
@@ -1358,6 +1363,12 @@ class rssSqlDbConnection(SqlDbConnection):
         self.addToLog(_msg, messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
         # result = {'summary':{'filersInfo':{'insert': len(newCiksData), 'update': len(updatedExistingCiksData)}}, 'stats': _msg}
         result = {'summary':{'filersInfo':{'insert': allNewCikData, 'update': allUpdatedExistingCiksData}}, 'stats': _msg}
+
+        # update filers' dump if we just refreshed all
+        if refreshAll:
+            self.addToLog(_('Updating filersInfo dump file after refreshing all filers\' information'), 
+                messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
+            self.dumpFilersInfo() 
         if returnData:
             result['newCiks'] = newCiksData
             result['updatedCiks'] = updatedExistingCiksData
@@ -1707,15 +1718,23 @@ class rssSqlDbConnection(SqlDbConnection):
 
     def dumpFilersInfo(self):
         """Creates dumps filers table to a pickle file 
-        This is useful when creating db as retriving filers information consumes a lot of time because in addition
-        to the time consumed in parsing each filer's info page, SEC has a 10 requests per second limit, so the process
-        needs to be slowed down to accommodate the request limit.
+        When creating db this file is used to populate filers' information, reducing the time needed to get this information. 
+        Retriving filers information is a time consuming process, because in addition to the time needed in parsing each filer's 
+        info page, SEC has a 10 requests per second limit, so the process needs to be slowed down to accommodate the request limit.
 
-        When creating db filersInfo table is populated from this dump file, and updated with each update.
+        When creating the db filersInfo table is populated from this dump file. And during In routine update, if a change
+        in the name of the filer is detected, filer's information is updated using the most recent info page.
+        
+        `IMPORTANT` The dump file is updated when selecting `refreshAll` that refreshes all filers' info, before and after the 
+        refreshAll process, the dump file is updated.
+
+        a separate file is mantained for each type of database (sqlite, postgres and mongodb) in the formate {dbType_filersInfo.pkl}
+        in ddlScripts folder
 
         `WARNING` eventhough the update process tries to detect and update outdated filers' information, filers' information
         might still be outdated, every now and then it is good to select 'refreshAll' option when updating the db to retrive ALL
-        current filers' information from the SEC site to refresh filersInfo table this is time consuming but useful if done periodically.
+        current filers' information from the SEC site to refresh filersInfo table and dump file. This is time consuming but useful,
+        also useful to create a backup copy of the pickle file after full refresh.
         """
         filersTable = self.execute('SELECT * FROM "filersInfo"', fetch=True, close=False)
         cols = [x[0].decode() if isinstance(x[0], bytes) else x[0] for x in self.cursor.description]
@@ -2267,6 +2286,10 @@ class rssMongoDbConnection:
         newCiksData = []
         updatedExistingCiksData = []
         if refreshAll and hasTables:
+            # back up existing filersInfo first just in case!
+            self.addToLog(_('Updating filersInfo dump file before refreshing all filers\' information'), 
+                messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
+            self.dumpFilersInfo()
             self.dbConn[rssTables[3]].remove({})
         allNewCikData = 0
         if hasTables:
@@ -2349,6 +2372,13 @@ class rssMongoDbConnection:
         _msg = _('Finished updating filers information in {} secs').format(round(endTime-startTime,3))
         self.showStatus(_msg)
         result = {'summary':{rssTables[3]:{'insert': allNewCikData, 'update': allUpdatedExistingCiksData}}, 'stats': _msg}
+
+        # update filers' dump if we just refreshed all
+        if refreshAll:
+            self.addToLog(_('Updating filersInfo dump file after refreshing all filers\' information'), 
+                messageCode="RssDB.Info", file=self.conParams.get('database', ''),  level=logging.INFO)
+            self.dumpFilersInfo() 
+
         if returnData:
             result['newCiks'] = newCiksData
             result['updatedCiks'] = updatedExistingCiksData  
@@ -2651,15 +2681,23 @@ class rssMongoDbConnection:
 
     def dumpFilersInfo(self):
         """Creates dumps filers table to a pickle file 
-        This is useful when creating db as retriving filers information consumes a lot of time because in addition
-        to the time consumed in parsing each filer's info page, SEC has a 10 requests per second limit, so the process
-        needs to be slowed down to accommodate the request limit.
+        When creating db this file is used to populate filers' information, reducing the time needed to get this information. 
+        Retriving filers information is a time consuming process, because in addition to the time needed in parsing each filer's 
+        info page, SEC has a 10 requests per second limit, so the process needs to be slowed down to accommodate the request limit.
 
-        When creating db a choice can be made whether to use stored filers resulting from this dump or retrive from SEC site.
+        When creating the db filersInfo table is populated from this dump file. And during In routine update, if a change
+        in the name of the filer is detected, filer's information is updated using the most recent info page.
+        
+        `IMPORTANT` The dump file is updated when selecting `refreshAll` that refreshes all filers' info, before and after the 
+        refreshAll process, the dump file is updated.
+
+        a separate file is mantained for each type of database (sqlite, postgres and mongodb) in the formate {dbType_filersInfo.pkl}
+        in ddlScripts folder
 
         `WARNING` eventhough the update process tries to detect and update outdated filers' information, filers' information
         might still be outdated, every now and then it is good to select 'refreshAll' option when updating the db to retrive ALL
-        current filers' information from the SEC site to refresh filersInfo table.
+        current filers' information from the SEC site to refresh filersInfo table and dump file. This is time consuming but useful,
+        also useful to create a backup copy of the pickle file after full refresh.
         """
         filersInfo = list(self.dbConn.filersInfo.find({}, {"_id":0}))
         filersInfoDict = {'retrivedOn': datetime.now().replace(microsecond=0), 'sourceDBType':self.product, 'data': filersInfo}

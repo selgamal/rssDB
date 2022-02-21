@@ -185,16 +185,15 @@ def updateCikTickerMapping(conn, createTable=False, returnStats=False):
                             messageCode="RssDB.Info", messageArgs=conn.conParams.get('database',''), file="",  level=logging.INFO)
         _stat = _('{} not updated').format(rssTables[5])
     else:
-        if conn.product in ['sqlite', 'postgres']:
-            conn.execute('DELETE FROM "{}"'.format(rssTables[5]), fetch=False)
-        elif conn.product == 'mongodb':
-            conn.dbConn[rssTables[5]].remove({})
-
         resp = request.urlopen(url)
         if resp.code == 200:
             resp_lines = [x.decode() for x in resp.readlines()]
             lines = {tuple(l) for l in list(csv.reader(resp_lines, delimiter='\t'))} # remove dups
             data = [{'tickerSymbol':x[0], 'cikNumber': x[1].zfill(10)} for x in lines if x[0]]
+            if conn.product in ['sqlite', 'postgres']:
+                conn.execute('DELETE FROM "{}"'.format(rssTables[5]), fetch=False)
+            elif conn.product == 'mongodb':
+                conn.dbConn[rssTables[5]].remove({})
             _stat = conn.insertUpdateRssDB(data, "cikTickerMapping", returnStat=True)
             if conn.product in ['sqlite', 'postgres']:
                 conn.commit()
@@ -659,8 +658,9 @@ def _xDoAll(conn, loc=None, last=None, dateFrom=None, dateTo=None, getRssItems=T
         updateDB: whether to insert into db, should be always true
         reloadCache: reload already cached files, should be False always, this is only for testing,
                      noting that last feed is always reloaded.
-        updateExisting: check existing filers' information to see if needs update
-        refreshAll: reload all filers' information, takes a lot of time.
+        updateExisting: check existing filers' information to see if needs update, and updates detect changes only
+        refreshAll: reload all filers' information and creates a dump file to be used in repopulating filers info 
+                    when creating db, time consuming, but useful to do every few weeks.
         timeout: timeout for trying to fetch each filer information.
         retries: number of times to retry getting filer information if it fails.
         includeLatest: whether to include last 10 mins filing available in a seprate feed on SEC site, should be always True
@@ -726,8 +726,8 @@ def _xDoAll(conn, loc=None, last=None, dateFrom=None, dateTo=None, getRssItems=T
         results['feeds'] = rssFeeds['feeds'] 
         if filersInfo:
             results['filers'] = filersInfo
-    # update filers' dump
-    conn.dumpFilersInfo()
+    # # update filers' dump
+    # conn.dumpFilersInfo() # UPDATE: only do this when refreshAll is selected (moved to updateFilersInfo)
     conn.updateStarted = False
     return results
 

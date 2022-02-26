@@ -1179,7 +1179,7 @@ class rssSqlDbConnection(SqlDbConnection):
         self.closeCursor()
         return
 
-    def insertUpdateRssDB(self, inputData, dbTable, action='insert', updateCols=None, idCol=None, commit=False, returnStat=False):
+    def insertUpdateRssDB(self, inputData, dbTable, action='insert', updateCols=None, idCol=None, commit=False, returnStat=False, newCols=None):
         '''action either `insert` or `update` update to be based on SqlDBConnection.getTable/updateTable'''
         if action not in ('insert', 'update'):
             err_msg = _('Unknown action -> {}'.format(action))
@@ -1187,7 +1187,9 @@ class rssSqlDbConnection(SqlDbConnection):
             raise Exception(err_msg)
         self.verifyTables(createTables=True)
         _tbl = dbTable
-        _cols =  chkToList(updateCols, str) if action=='update' and updateCols else rssCols[_tbl]
+        _cols =  chkToList(updateCols, str) if action=='update' and updateCols else rssCols.get(_tbl, None)
+        if not _cols:
+            _cols = inputData[0].keys()
         if action == 'update' and idCol and idCol not in _cols:
             _cols.insert(0, idCol)
         _action = action
@@ -1200,7 +1202,7 @@ class rssSqlDbConnection(SqlDbConnection):
         if len(action_data) > 0:
             try:
                 if _action == 'insert':
-                    _ret_tbl = self._getTable(dbTable, None, tuple(_cols), (rssCols[_tbl][0],), action_data, returnMatches=False, commit=commit)
+                    _ret_tbl = self._getTable(dbTable, None, tuple(_cols), tuple(_cols), action_data, returnMatches=False, commit=commit)
                     row_count = len(action_data)
                 elif _action == 'update':
                     self._updateTable(dbTable, tuple(_cols), action_data, commit=commit)

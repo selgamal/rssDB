@@ -180,7 +180,7 @@ def _getSP500():
     for tr in trs:
         sp500Tkrs.append(tuple(d.text.replace('\n', '') if d.text else (d.xpath('.//a/text()')[0] if d.xpath('.//a/text()') else None) for d in tr.findall('td')))
 
-    tks_site = [(x[0].lower().replace('.', '-'), x[-2]) for x in sp500Tkrs if x]
+    tks_site = [(x[0].lower().replace('.', '-'), x[-2], x[-3]) for x in sp500Tkrs if x]
     res = list(set(tks_site))
     res.sort(key=lambda x: x[0])
     return res
